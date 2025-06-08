@@ -3,12 +3,12 @@
 // © iLanat8
 //@version=6
 
-indicator("Larry Williams VixFix")
+indicator(title = "Larry Williams VixFix", shorttitle = "L.W VixFix" , precision = 2)
 
 // Input parameters
-length1 = input.int(22, title="Length 1")
-length2 = input.int(50, title="Length 2")
-length3 = input.int(100, title="Length 3")
+length1 = input.int(title="Length 1", defval = 22, tooltip = "Average number of trading days in 1 month")
+length2 = input.int(title="Length 2", defval = 66, tooltip = "Average number of trading days in 3 month")
+length3 = input.int(title="Length 3", defval = 132, tooltip = "Average number of trading days in 6 month")
 
 // Calculations
 buy1 = ((high - ta.lowest(close[1], length1)) / ta.lowest(close[1], length1)) * 100
@@ -18,11 +18,27 @@ sell1 = ((low - ta.highest(close[1], length1)) / ta.highest(close[1], length1)) 
 sell2 = ((low - ta.highest(close[1], length2)) / ta.highest(close[1], length2)) * 100
 sell3 = ((low - ta.highest(close[1], length3)) / ta.highest(close[1], length3)) * 100
 
-// Style perameters
+// Detect zero crossings for buy lines
+buy1_cross = ta.cross(buy1, 0)
+buy2_cross = ta.cross(buy2, 0)
+buy3_cross = ta.cross(buy3, 0)
+
+// Detect zero crossings for sell lines
+sell1_cross = ta.cross(sell1, 0)
+sell2_cross = ta.cross(sell2, 0)
+sell3_cross = ta.cross(sell3, 0)
+
+// Style line perameters
 hline(0, "Zero Line", color=#FFFFFF, linewidth=1)
-plot(buy1, title="Buy1", color=#00FF00, linewidth=1)
-plot(buy2, title="Buy2", color=#008000, linewidth=1)
-plot(buy3, title="Buy3", color=#006400, linewidth=1)
-plot(sell1, title="Sell1", color=#FF0000, linewidth=1)
-plot(sell2, title="Sell2", color=#B22222, linewidth=1)
-plot(sell3, title="Sell3", color=#8B0000, linewidth=1)
+plot(buy1, title="Buy1", color=color.new(#00FF00, 60), linewidth=1)
+plot(buy2, title="Buy2", color=color.new(#00FF00, 50), linewidth=1)
+plot(buy3, title="Buy3", color=color.new(#00FF00, 40), linewidth=1)
+plot(sell1, title="Sell1", color=color.new(#FF0000, 60), linewidth=1)
+plot(sell2, title="Sell2", color=color.new(#FF0000, 50), linewidth=1)
+plot(sell3, title="Sell3", color=color.new(#FF0000, 40), linewidth=1)
+
+// Style background coloring
+buy_count = (buy1 < 0 ? 1 : 0) + (buy2 < 0 ? 1 : 0) + (buy3 < 0 ? 1 : 0)
+sell_count = (sell1 > 0 ? 1 : 0) + (sell2 > 0 ? 1 : 0) + (sell3 > 0 ? 1 : 0)
+
+bgcolor(  buy_count == 1 ? color.new(#00FF00, 60) :  buy_count == 2 ? color.new(#00FF00, 50) :  buy_count == 3 ? color.new(#00FF00, 40) :  sell_count == 1 ? color.new(#FF0000, 60) :  sell_count == 2 ? color.new(#FF0000, 50) :  sell_count == 3 ? color.new(#FF0000, 40) :  na,  title="Buy/Sell Intensity Background")
