@@ -1,0 +1,214 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © iLanat8
+//@version=6
+
+indicator('All Moving Averages', overlay=true, shorttitle='Moving Avg')
+
+// --- Simple Moving Average (SMA) ---
+smaLength1 = input(20, title = 'SMA Length 1', tooltip='Period for the first Simple Moving Average (SMA). Higher values = smoother line, slower response.')
+smaLength2 = input(50, title = 'SMA Length 2', tooltip='Period for the second SMA.')
+smaLength3 = input(100, title = 'SMA Length 3', tooltip='Period for the third SMA.')
+smaLength4 = input(200, title = 'SMA Length 4', tooltip='Period for the fourth SMA.')
+sma1 = ta.sma(close, smaLength1)
+sma2 = ta.sma(close, smaLength2)
+sma3 = ta.sma(close, smaLength3)
+sma4 = ta.sma(close, smaLength4)
+plot(sma1, color = #E39B38, title = 'SMA Length 1')
+plot(sma2, color = #B55A30, title = 'SMA Length 2')
+plot(sma3, color = #6D3B2E, title = 'SMA Length 3')
+plot(sma4, color = #3E2723, title = 'SMA Length 4', display = display.none)
+
+// --- Exponential Moving Average (EMA) ---
+emaLength1 = input(9, title = 'EMA Length 1', tooltip='Period for the first Exponential Moving Average (EMA). Faster response to price.')
+emaLength2 = input(21, title = 'EMA Length 2', tooltip='Period for the second EMA.')
+emaLength3 = input(50, title = 'EMA Length 3', tooltip='Period for the third EMA.')
+emaLength4 = input(200, title = 'EMA Length 4', tooltip='Period for the fourth EMA.')
+ema1 = ta.ema(close, emaLength1)
+ema2 = ta.ema(close, emaLength2)
+ema3 = ta.ema(close, emaLength3)
+ema4 = ta.ema(close, emaLength4)
+plot(ema1, color = #D8A059, title = 'EMA Length 1', display = display.none)
+plot(ema2, color = #A76D3C, title = 'EMA Length 2', display = display.none)
+plot(ema3, color = #6F5E2F, title = 'EMA Length 3', display = display.none)
+plot(ema4, color = #3A3329, title = 'EMA Length 4', display = display.none)
+
+// --- Weighted Moving Average (WMA) ---
+wmaLength1 = input(10, title = 'WMA Length 1', tooltip='Period for the first Weighted Moving Average (WMA). Weights recent prices more.')
+wmaLength2 = input(20, title = 'WMA Length 2', tooltip='Period for the second WMA.')
+wmaLength3 = input(50, title = 'WMA Length 3', tooltip='Period for the third WMA.')
+wmaLength4 = input(100, title = 'WMA Length 4', tooltip='Period for the fourth WMA.')
+wma1 = ta.wma(close, wmaLength1)
+wma2 = ta.wma(close, wmaLength2)
+wma3 = ta.wma(close, wmaLength3)
+wma4 = ta.wma(close, wmaLength4)
+plot(wma1, color = #9E3B28, title = 'WMA Length 1', display = display.none)
+plot(wma2, color = #6D3B2E, title = 'WMA Length 2', display = display.none)
+plot(wma3, color = #A76D3C, title = 'WMA Length 3', display = display.none)
+plot(wma4, color = #3E2723, title = 'WMA Length 4', display = display.none)
+
+// --- Hull Moving Average (HMA) ---
+hmaLength1 = input(9, title = 'HMA Length 1', tooltip='Period for the first Hull Moving Average (HMA). Smoother and faster than SMA/EMA.')
+hmaLength2 = input(21, title = 'HMA Length 2', tooltip='Period for the second HMA.')
+hmaLength3 = input(55, title = 'HMA Length 3', tooltip='Period for the third HMA.')
+hmaLength4 = input(89, title = 'HMA Length 4', tooltip='Period for the fourth HMA.')
+hma1 = ta.hma(close, hmaLength1)
+hma2 = ta.hma(close, hmaLength2)
+hma3 = ta.hma(close, hmaLength3)
+hma4 = ta.hma(close, hmaLength4)
+plot(hma1, color = #D8A059, title = 'HMA Length 1', display = display.none)
+plot(hma2, color = #B55A30, title = 'HMA Length 2', display = display.none)
+plot(hma3, color = #6F5E2F, title = 'HMA Length 3', display = display.none)
+plot(hma4, color = #3A3329, title = 'HMA Length 4', display = display.none)
+
+// --- Volume Weighted Moving Average (VWMA) ---
+vwmaLength1 = input(10, title = 'VWMA Length 1', tooltip='Period for the first Volume Weighted Moving Average (VWMA). Weights by volume.')
+vwmaLength2 = input(20, title = 'VWMA Length 2', tooltip='Period for the second VWMA.')
+vwmaLength3 = input(50, title = 'VWMA Length 3', tooltip='Period for the third VWMA.')
+vwmaLength4 = input(100, title = 'VWMA Length 4', tooltip='Period for the fourth VWMA.')
+vwma1 = ta.vwma(close, vwmaLength1)
+vwma2 = ta.vwma(close, vwmaLength2)
+vwma3 = ta.vwma(close, vwmaLength3)
+vwma4 = ta.vwma(close, vwmaLength4)
+plot(vwma1, color = #E39B38, title = 'VWMA Length 1', display = display.none)
+plot(vwma2, color = #B55A30, title = 'VWMA Length 2', display = display.none)
+plot(vwma3, color = #6D3B2E, title = 'VWMA Length 3', display = display.none)
+plot(vwma4, color = #3E2723, title = 'VWMA Length 4', display = display.none)
+
+// --- Relative Moving Average (RMA) ---
+rmaLength1 = input(14, title = 'RMA Length 1', tooltip='Period for the first Relative Moving Average (RMA/Wilder\'s Smoothing). Used in RSI.')
+rmaLength2 = input(21, title = 'RMA Length 2', tooltip='Period for the second RMA.')
+rmaLength3 = input(50, title = 'RMA Length 3', tooltip='Period for the third RMA.')
+rmaLength4 = input(100, title = 'RMA Length 4', tooltip='Period for the fourth RMA.')
+rma1 = ta.rma(close, rmaLength1)
+rma2 = ta.rma(close, rmaLength2)
+rma3 = ta.rma(close, rmaLength3)
+rma4 = ta.rma(close, rmaLength4)
+plot(rma1, color = #8E44AD, title = 'RMA Length 1', display = display.none)
+plot(rma2, color = #7D3C98, title = 'RMA Length 2', display = display.none)
+plot(rma3, color = #5B2C6F, title = 'RMA Length 3', display = display.none)
+plot(rma4, color = #4A235A, title = 'RMA Length 4', display = display.none)
+
+// --- Double Exponential Moving Average (DEMA) ---
+demaLength1 = input(20, title = 'DEMA Length 1', tooltip='Period for the first Double Exponential Moving Average (DEMA). Faster than EMA.')
+demaLength2 = input(50, title = 'DEMA Length 2', tooltip='Period for the second DEMA.')
+demaLength3 = input(100, title = 'DEMA Length 3', tooltip='Period for the third DEMA.')
+demaLength4 = input(200, title = 'DEMA Length 4', tooltip='Period for the fourth DEMA.')
+f_dema(src, len) =>
+    d_ema1 = ta.ema(src, len)
+    d_ema2 = ta.ema(d_ema1, len)
+    2 * d_ema1 - d_ema2
+dema1 = f_dema(close, demaLength1)
+dema2 = f_dema(close, demaLength2)
+dema3 = f_dema(close, demaLength3)
+dema4 = f_dema(close, demaLength4)
+plot(dema1, color = #2980B9, title = 'DEMA Length 1', display = display.none)
+plot(dema2, color = #2471A3, title = 'DEMA Length 2', display = display.none)
+plot(dema3, color = #1B4F72, title = 'DEMA Length 3', display = display.none)
+plot(dema4, color = #154360, title = 'DEMA Length 4', display = display.none)
+
+// --- Triple Exponential Moving Average (TEMA) ---
+temaLength1 = input(20, title = 'TEMA Length 1', tooltip='Period for the first Triple Exponential Moving Average (TEMA). Even less lag.')
+temaLength2 = input(50, title = 'TEMA Length 2', tooltip='Period for the second TEMA.')
+temaLength3 = input(100, title = 'TEMA Length 3', tooltip='Period for the third TEMA.')
+temaLength4 = input(200, title = 'TEMA Length 4', tooltip='Period for the fourth TEMA.')
+f_tema(src, len) =>
+    t_ema1 = ta.ema(src, len)
+    t_ema2 = ta.ema(t_ema1, len)
+    t_ema3 = ta.ema(t_ema2, len)
+    3 * (t_ema1 - t_ema2) + t_ema3
+tema1 = f_tema(close, temaLength1)
+tema2 = f_tema(close, temaLength2)
+tema3 = f_tema(close, temaLength3)
+tema4 = f_tema(close, temaLength4)
+plot(tema1, color = #16A085, title = 'TEMA Length 1', display = display.none)
+plot(tema2, color = #117864, title = 'TEMA Length 2', display = display.none)
+plot(tema3, color = #0B5345, title = 'TEMA Length 3', display = display.none)
+plot(tema4, color = #145A32, title = 'TEMA Length 4', display = display.none)
+
+// --- Kaufman Adaptive Moving Average (KAMA) ---
+kamaLength1 = input(10, title = 'KAMA Length 1', tooltip='Period for the first Kaufman Adaptive Moving Average (KAMA). Adapts to volatility.')
+kamaLength2 = input(21, title = 'KAMA Length 2', tooltip='Period for the second KAMA.')
+kamaLength3 = input(50, title = 'KAMA Length 3', tooltip='Period for the third KAMA.')
+kamaLength4 = input(100, title = 'KAMA Length 4', tooltip='Period for the fourth KAMA.')
+f_kama(src, len) =>
+    n = len
+    change = math.abs(src - src[n])
+    volatility = 0.0
+    for i = 0 to n - 1
+        volatility := volatility + math.abs(src[i] - src[i + 1])
+    er = volatility != 0 ? change / volatility : 0
+    fast = 2 / (2 + 1)
+    slow = 2 / (30 + 1)
+    sc = math.pow(er * (fast - slow) + slow, 2)
+    kama = 0.0
+    kama := na(kama[1]) ? src : kama[1] + sc * (src - kama[1])
+    kama
+kama1 = f_kama(close, kamaLength1)
+kama2 = f_kama(close, kamaLength2)
+kama3 = f_kama(close, kamaLength3)
+kama4 = f_kama(close, kamaLength4)
+plot(kama1, color = #F39C12, title = 'KAMA Length 1', display = display.none)
+plot(kama2, color = #D68910, title = 'KAMA Length 2', display = display.none)
+plot(kama3, color = #B9770E, title = 'KAMA Length 3', display = display.none)
+plot(kama4, color = #7E5109, title = 'KAMA Length 4', display = display.none)
+
+// --- Arnaud Legoux Moving Average (ALMA) ---
+almaLength1 = input(9, title = 'ALMA Length 1', tooltip='Period for the first Arnaud Legoux Moving Average (ALMA). Uses Gaussian distribution.')
+almaLength2 = input(21, title = 'ALMA Length 2', tooltip='Period for the second ALMA.')
+almaLength3 = input(50, title = 'ALMA Length 3', tooltip='Period for the third ALMA.')
+almaLength4 = input(100, title = 'ALMA Length 4', tooltip='Period for the fourth ALMA.')
+alma1 = ta.alma(close, almaLength1, 0.85, 6)
+alma2 = ta.alma(close, almaLength2, 0.85, 6)
+alma3 = ta.alma(close, almaLength3, 0.85, 6)
+alma4 = ta.alma(close, almaLength4, 0.85, 6)
+plot(alma1, color = #C0392B, title = 'ALMA Length 1', display = display.none)
+plot(alma2, color = #922B21, title = 'ALMA Length 2', display = display.none)
+plot(alma3, color = #7B241C, title = 'ALMA Length 3', display = display.none)
+plot(alma4, color = #641E16, title = 'ALMA Length 4', display = display.none)
+
+// --- Least Squares Moving Average (LSMA) ---
+lsmaLength1 = input(25, title = 'LSMA Length 1', tooltip='Period for the first Least Squares Moving Average (LSMA/Linear Regression).')
+lsmaLength2 = input(50, title = 'LSMA Length 2', tooltip='Period for the second LSMA.')
+lsmaLength3 = input(100, title = 'LSMA Length 3', tooltip='Period for the third LSMA.')
+lsmaLength4 = input(200, title = 'LSMA Length 4', tooltip='Period for the fourth LSMA.')
+lsma1 = ta.linreg(close, lsmaLength1, 0)
+lsma2 = ta.linreg(close, lsmaLength2, 0)
+lsma3 = ta.linreg(close, lsmaLength3, 0)
+lsma4 = ta.linreg(close, lsmaLength4, 0)
+plot(lsma1, color = #2C3E50, title = 'LSMA Length 1', display = display.none)
+plot(lsma2, color = #1A5276, title = 'LSMA Length 2', display = display.none)
+plot(lsma3, color = #154360, title = 'LSMA Length 3', display = display.none)
+plot(lsma4, color = #212F3C, title = 'LSMA Length 4', display = display.none)
+
+// --- Triangular Moving Average (TMA) ---
+tmaLength1 = input(20, title = 'TMA Length 1', tooltip='Period for the first Triangular Moving Average (TMA). Double-smoothed SMA.')
+tmaLength2 = input(50, title = 'TMA Length 2', tooltip='Period for the second TMA.')
+tmaLength3 = input(100, title = 'TMA Length 3', tooltip='Period for the third TMA.')
+tmaLength4 = input(200, title = 'TMA Length 4', tooltip='Period for the fourth TMA.')
+f_tma(src, len) =>
+    ta.sma(ta.sma(src, math.round(len / 2)), len)
+tma1 = f_tma(close, tmaLength1)
+tma2 = f_tma(close, tmaLength2)
+tma3 = f_tma(close, tmaLength3)
+tma4 = f_tma(close, tmaLength4)
+plot(tma1, color = #27AE60, title = 'TMA Length 1', display = display.none)
+plot(tma2, color = #229954, title = 'TMA Length 2', display = display.none)
+plot(tma3, color = #196F3D, title = 'TMA Length 3', display = display.none)
+plot(tma4, color = #186A3B, title = 'TMA Length 4', display = display.none)
+
+// --- Zero Lag Exponential Moving Average (ZLEMA) ---
+zlemaLength1 = input(20, title = 'ZLEMA Length 1', tooltip='Period for the first Zero Lag Exponential Moving Average (ZLEMA). Reduces lag.')
+zlemaLength2 = input(50, title = 'ZLEMA Length 2', tooltip='Period for the second ZLEMA.')
+zlemaLength3 = input(100, title = 'ZLEMA Length 3', tooltip='Period for the third ZLEMA.')
+zlemaLength4 = input(200, title = 'ZLEMA Length 4', tooltip='Period for the fourth ZLEMA.')
+f_zlema(src, len) =>
+    lag = math.floor((len - 1) / 2)
+    ta.ema(src + (src - src[lag]), len)
+zlema1 = f_zlema(close, zlemaLength1)
+zlema2 = f_zlema(close, zlemaLength2)
+zlema3 = f_zlema(close, zlemaLength3)
+zlema4 = f_zlema(close, zlemaLength4)
+plot(zlema1, color = #E67E22, title = 'ZLEMA Length 1', display = display.none)
+plot(zlema2, color = #CA6F1E, title = 'ZLEMA Length 2', display = display.none)
+plot(zlema3, color = #A04000, title = 'ZLEMA Length 3', display = display.none)
+plot(zlema4, color = #6E2C00, title = 'ZLEMA Length 4', display = display.none)
