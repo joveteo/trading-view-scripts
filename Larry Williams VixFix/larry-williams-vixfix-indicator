@@ -1,0 +1,28 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// Source https://www.ireallytrade.com/newsletters/VIXFix.pdf
+// © iLanat8
+//@version=6
+
+indicator("Larry Williams VixFix")
+
+// Input parameters
+length1 = input.int(22, title="Length 1")
+length2 = input.int(50, title="Length 2")
+length3 = input.int(100, title="Length 3")
+
+// Calculations
+buy1 = ((high - ta.lowest(close[1], length1)) / ta.lowest(close[1], length1)) * 100
+buy2 = ((high - ta.lowest(close[1], length2)) / ta.lowest(close[1], length2)) * 100
+buy3 = ((high - ta.lowest(close[1], length3)) / ta.lowest(close[1], length3)) * 100
+sell1 = ((low - ta.highest(close[1], length1)) / ta.highest(close[1], length1)) * 100
+sell2 = ((low - ta.highest(close[1], length2)) / ta.highest(close[1], length2)) * 100
+sell3 = ((low - ta.highest(close[1], length3)) / ta.highest(close[1], length3)) * 100
+
+// Style perameters
+hline(0, "Zero Line", color=#FFFFFF, linewidth=1)
+plot(buy1, title="Buy1", color=#00FF00, linewidth=1)
+plot(buy2, title="Buy2", color=#008000, linewidth=1)
+plot(buy3, title="Buy3", color=#006400, linewidth=1)
+plot(sell1, title="Sell1", color=#FF0000, linewidth=1)
+plot(sell2, title="Sell2", color=#B22222, linewidth=1)
+plot(sell3, title="Sell3", color=#8B0000, linewidth=1)
