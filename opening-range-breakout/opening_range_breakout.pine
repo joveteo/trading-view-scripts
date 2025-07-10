@@ -1,0 +1,208 @@
+//@version=5
+indicator("Opening Range Breakout", shorttitle="ORB", overlay=true, max_lines_count=500, max_labels_count=500)
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+// INPUTS
+// ═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+// Opening Range Duration Input
+orb_duration = input.int(60, title="Opening Range Duration (Minutes)", minval=1, maxval=480, 
+     tooltip="Duration in minutes for calculating the opening range after market open. Ensure your chart timeframe allows intraday viewing.")
+
+// Visual Settings
+show_lines = input.bool(true, title="Show Opening Range Lines", tooltip="Display the high and low range lines on the chart")
+show_stats = input.bool(true, title="Show Statistics", tooltip="Display statistics table showing successful/unsuccessful days")
+line_transparency = input.int(88, title="Line Transparency (%)", minval=0, maxval=100, tooltip="Transparency level for the range lines (0 = opaque, 100 = transparent)")
+
+// Alert Settings
+enable_alerts = input.bool(true, title="Enable Breakout Alerts", tooltip="Enable sound alerts when price crosses either side of the opening range")
+
+// Session Settings
+session_start = input.session("0930-1600", title="Trading Session", tooltip="Market session for calculating opening range (format: HHMM-HHMM)")
+session_timezone = input.string("America/New_York", title="Session Timezone", tooltip="Timezone for the trading session")
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+// VARIABLES AND STATES
+// ═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+// Opening Range Variables
+var float orb_high = na
+var float orb_low = na
+var int orb_start_time = na
+var int orb_end_time = na
+var bool orb_calculated = false
+var line orb_high_line = na
+var line orb_low_line = na
+var label stats_label = na
+
+// Statistics Variables
+var int total_days = 0
+var int days_within_range = 0
+var int days_crossed_both = 0
+var bool daily_high_crossed = false
+var bool daily_low_crossed = false
+
+// Session Detection
+session_is_active = not na(time(timeframe.period, session_start, session_timezone))
+session_just_started = session_is_active and not session_is_active[1]
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+// FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+// Function to check if current time is within opening range period
+is_within_opening_range() =>
+    if session_just_started
+        orb_start_time := time
+        orb_end_time := time + (orb_duration * 60 * 1000)  // Convert minutes to milliseconds
+    
+    time >= orb_start_time and time <= orb_end_time and session_is_active
+
+// Function to update statistics at end of day
+update_daily_stats() =>
+    if session_just_started and total_days > 0
+        // Check previous day's activity
+        if daily_high_crossed and daily_low_crossed
+            days_crossed_both += 1
+        else if not daily_high_crossed and not daily_low_crossed
+            days_within_range += 1
+        
+        // Reset daily flags
+        daily_high_crossed := false
+        daily_low_crossed := false
+
+// Function to create or update statistics table
+create_stats_table() =>
+    if show_stats and barstate.islast
+        // Calculate percentages
+        success_rate = total_days > 0 ? (days_within_range / total_days) * 100 : 0
+        cross_both_rate = total_days > 0 ? (days_crossed_both / total_days) * 100 : 0
+        
+        // Create table text
+        stats_text = "ORB Statistics\n" + 
+                     "─────────────────\n" +
+                     "Total Days: " + str.tostring(total_days) + "\n" +
+                     "Stayed Within Range: " + str.tostring(days_within_range) + " (" + str.tostring(success_rate, "#.##") + "%)\n" +
+                     "Crossed Both Ends: " + str.tostring(days_crossed_both) + " (" + str.tostring(cross_both_rate, "#.##") + "%)\n" +
+                     "Other Outcomes: " + str.tostring(total_days - days_within_range - days_crossed_both)
+        
+        // Remove existing label
+        if not na(stats_label)
+            label.delete(stats_label)
+        
+        // Create new label
+        stats_label := label.new(
+             x=bar_index + 10, 
+             y=high, 
+             text=stats_text, 
+             style=label.style_label_left,
+             color=color.white,
+             textcolor=color.black,
+             size=size.normal
+             )
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+// MAIN LOGIC
+// ═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+// Start of new session - reset variables and update stats
+if session_just_started
+    update_daily_stats()
+    orb_calculated := false
+    orb_high := na
+    orb_low := na
+    
+    // Delete previous day's lines
+    if not na(orb_high_line)
+        line.delete(orb_high_line)
+    if not na(orb_low_line)
+        line.delete(orb_low_line)
+
+// Calculate Opening Range during the specified period
+if is_within_opening_range()
+    if na(orb_high) or high > orb_high
+        orb_high := high
+    if na(orb_low) or low < orb_low
+        orb_low := low
+
+// Mark end of opening range period and create lines
+if not is_within_opening_range() and not orb_calculated and not na(orb_high) and not na(orb_low)
+    orb_calculated := true
+    total_days += 1
+    
+    if show_lines
+        // Create high line (green)
+        orb_high_line := line.new(
+             x1=orb_end_time, 
+             y1=orb_high, 
+             x2=time + (8 * 60 * 60 * 1000),  // Extend 8 hours into future
+             y2=orb_high,
+             color=color.new(color.green, line_transparency),
+             width=2,
+             style=line.style_solid
+             )
+        
+        // Create low line (red)
+        orb_low_line := line.new(
+             x1=orb_end_time, 
+             y1=orb_low, 
+             x2=time + (8 * 60 * 60 * 1000),  // Extend 8 hours into future
+             y2=orb_low,
+             color=color.new(color.red, line_transparency),
+             width=2,
+             style=line.style_solid
+             )
+
+// Check for breakouts and update daily flags
+if orb_calculated and session_is_active and not na(orb_high) and not na(orb_low)
+    // Check high breakout
+    if high > orb_high and not daily_high_crossed
+        daily_high_crossed := true
+        if enable_alerts
+            alert("Price broke above Opening Range High: " + str.tostring(orb_high, "#.##"), alert.freq_once_per_bar)
+    
+    // Check low breakout
+    if low < orb_low and not daily_low_crossed
+        daily_low_crossed := true
+        if enable_alerts
+            alert("Price broke below Opening Range Low: " + str.tostring(orb_low, "#.##"), alert.freq_once_per_bar)
+
+// Update lines to extend with current time
+if orb_calculated and session_is_active and show_lines
+    if not na(orb_high_line)
+        line.set_x2(orb_high_line, time + (2 * 60 * 60 * 1000))  // Extend 2 hours ahead
+    if not na(orb_low_line)
+        line.set_x2(orb_low_line, time + (2 * 60 * 60 * 1000))   // Extend 2 hours ahead
+
+// Create/update statistics table
+create_stats_table()
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+// PLOTTING
+// ═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+// Plot breakout signals
+plotshape(orb_calculated and session_is_active and high > orb_high and not daily_high_crossed[1], 
+          style=shape.triangleup, location=location.belowbar, color=color.green, size=size.small, title="High Breakout")
+
+plotshape(orb_calculated and session_is_active and low < orb_low and not daily_low_crossed[1], 
+          style=shape.triangledown, location=location.abovebar, color=color.red, size=size.small, title="Low Breakout")
+
+// Plot range values for reference (invisible plots for data window)
+plot(orb_calculated ? orb_high : na, title="ORB High", color=color.new(color.green, 100), linewidth=1)
+plot(orb_calculated ? orb_low : na, title="ORB Low", color=color.new(color.red, 100), linewidth=1)
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+// ALERTS
+// ═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+// Additional alert conditions for creating custom alerts
+alertcondition(orb_calculated and session_is_active and high > orb_high and not daily_high_crossed[1], 
+               title="ORB High Breakout", message="Opening Range High Broken")
+
+alertcondition(orb_calculated and session_is_active and low < orb_low and not daily_low_crossed[1], 
+               title="ORB Low Breakout", message="Opening Range Low Broken")
+
+alertcondition((orb_calculated and session_is_active and high > orb_high and not daily_high_crossed[1]) or 
+               (orb_calculated and session_is_active and low < orb_low and not daily_low_crossed[1]), 
+               title="Any ORB Breakout", message="Opening Range Breakout Detected")
