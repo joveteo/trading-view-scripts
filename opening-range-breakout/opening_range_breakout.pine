@@ -1,4 +1,4 @@
-//@version=5
+//@version=6
 indicator("Opening Range Breakout", shorttitle="ORB", overlay=true, max_lines_count=500, max_labels_count=500)
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -51,12 +51,8 @@ session_just_started = session_is_active and not session_is_active[1]
 // ═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
 // Function to check if current time is within opening range period
-is_within_opening_range() =>
-    if session_just_started
-        orb_start_time := time
-        orb_end_time := time + (orb_duration * 60 * 1000)  // Convert minutes to milliseconds
-    
-    time >= orb_start_time and time <= orb_end_time and session_is_active
+is_within_opening_range(start_time, end_time) =>
+    time >= start_time and time <= end_time and session_is_active
 
 // Function to update statistics at end of day
 update_daily_stats() =>
@@ -111,6 +107,8 @@ if session_just_started
     orb_calculated := false
     orb_high := na
     orb_low := na
+    orb_start_time := time
+    orb_end_time := time + (orb_duration * 60 * 1000)  // Convert minutes to milliseconds
     
     // Delete previous day's lines
     if not na(orb_high_line)
@@ -119,14 +117,14 @@ if session_just_started
         line.delete(orb_low_line)
 
 // Calculate Opening Range during the specified period
-if is_within_opening_range()
+if not na(orb_start_time) and not na(orb_end_time) and is_within_opening_range(orb_start_time, orb_end_time)
     if na(orb_high) or high > orb_high
         orb_high := high
     if na(orb_low) or low < orb_low
         orb_low := low
 
 // Mark end of opening range period and create lines
-if not is_within_opening_range() and not orb_calculated and not na(orb_high) and not na(orb_low)
+if not na(orb_start_time) and not na(orb_end_time) and not is_within_opening_range(orb_start_time, orb_end_time) and not orb_calculated and not na(orb_high) and not na(orb_low)
     orb_calculated := true
     total_days += 1
     
