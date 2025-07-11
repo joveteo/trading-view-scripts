@@ -2,6 +2,8 @@
 
 A comprehensive TradingView Pine Script indicator that identifies and tracks opening range breakouts with customizable duration, statistics tracking, and alert functionality.
 
+> **✅ LATEST UPDATE (v1.4):** Fixed global variable error and updated to Pine Script v6 - fully functional and bug-free!
+
 ## 📋 Overview
 
 The Opening Range Breakout indicator captures the high and low of the first N minutes after market open and draws horizontal lines to track potential breakouts. This tool is particularly useful for options traders looking to capture premium decay by opening vertical spreads on the other side of the opening range.
@@ -150,6 +152,7 @@ These statistics help traders understand:
 - **v1.1**: Added statistics tracking and performance metrics
 - **v1.2**: Enhanced alert system with multiple breakout types
 - **v1.3**: Improved session detection and timezone handling
+- **v1.4**: **FIXED** - Global variable error and updated to Pine Script v6
 
 ## 🤝 Contributing
 
