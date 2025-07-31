@@ -139,6 +139,7 @@ var float session_open_price = na
 var table stats_table = na
 var bool session_processed = false
 var bool is_tradable_day = false
+var label day_outcome_label = na
 
 //---------------------------------------------------------------------------------------------------------------------}
 //Calculations
@@ -193,18 +194,38 @@ if or_start
                 
                 if or_range < width_threshold
                     width_error_days += 1
+                    // Add label for width error at previous day's OR high
+                    if not na(prev_orh)
+                        label.new(bar_index - 1, prev_orh + (prev_orh - prev_orl) * 0.1, "W", 
+                                 style=label.style_label_down, color=color.orange, textcolor=color.white, 
+                                 size=size.tiny, tooltip="Width Error: Opening range < 0.2%")
                 else
                     // Day was tradable, check for breakout outcomes
                     if prev_broke_high or prev_broke_low
                         // Win condition: breakout high and close doesn't exceed OR low, OR breakout low and close doesn't exceed OR high
                         if (prev_broke_high and prev_close >= prev_orl) or (prev_broke_low and prev_close <= prev_orh)
                             profit_days += 1
+                            // Add profit label at previous day's OR high
+                            if not na(prev_orh)
+                                label.new(bar_index - 1, prev_orh + (prev_orh - prev_orl) * 0.1, "P", 
+                                         style=label.style_label_down, color=color.green, textcolor=color.white, 
+                                         size=size.tiny, tooltip="Profit Day: Breakout with favorable close")
                         // Loss condition: breakout but close exceeds opposite boundary
                         else if (prev_broke_high and prev_close < prev_orl) or (prev_broke_low and prev_close > prev_orh)
                             loss_days += 1
+                            // Add loss label at previous day's OR high
+                            if not na(prev_orh)
+                                label.new(bar_index - 1, prev_orh + (prev_orh - prev_orl) * 0.1, "L", 
+                                         style=label.style_label_down, color=color.red, textcolor=color.white, 
+                                         size=size.tiny, tooltip="Loss Day: Breakout with unfavorable close")
                     else
                         // No breakout occurred - error day
                         error_days += 1
+                        // Add error label at previous day's OR high
+                        if not na(prev_orh)
+                            label.new(bar_index - 1, prev_orh + (prev_orh - prev_orl) * 0.1, "E", 
+                                     style=label.style_label_down, color=color.blue, textcolor=color.white, 
+                                     size=size.tiny, tooltip="Error Day: No breakout occurred")
     
     for targ in up_targs
         if showHist == false
@@ -230,6 +251,11 @@ if or_start
     l_ln.lab.delete()
     up_targs.clear()
     down_targs.clear()
+    
+    // Clean up previous day outcome label
+    if not na(day_outcome_label) and showHist == false
+        day_outcome_label.delete()
+    day_outcome_label := na
 
     orh := high
     orl := low
@@ -286,6 +312,67 @@ if not or_sesh and or_token and not na(orh) and not na(orl) and is_tradable_day
         daily_broke_high := true
     if close < orl and not daily_broke_low
         daily_broke_low := true
+    
+    // Update day outcome label in real-time if we can determine the outcome
+    // Only update if we haven't created a final outcome label yet
+    if na(day_outcome_label) and (daily_broke_high or daily_broke_low)
+        // Create a temporary outcome label that will be updated
+        outcomeText = ""
+        outcomeColor = color.gray
+        
+        if daily_broke_high and daily_broke_low
+            // Both breakouts occurred - need to wait for close to determine outcome
+            outcomeText := "B"  // Both breakouts
+            outcomeColor := color.gray
+        else if daily_broke_high
+            // High breakout occurred
+            if close >= orl
+                outcomeText := "P?"  // Potential profit
+                outcomeColor := color.lime
+            else
+                outcomeText := "L?"  // Potential loss  
+                outcomeColor := color.red
+        else if daily_broke_low
+            // Low breakout occurred
+            if close <= orh
+                outcomeText := "P?"  // Potential profit
+                outcomeColor := color.lime
+            else
+                outcomeText := "L?"  // Potential loss
+                outcomeColor := color.red
+        
+        if outcomeText != ""
+            day_outcome_label := label.new(bar_index, orh + (orh - orl) * 0.1, outcomeText, 
+                                          style=label.style_label_down, color=outcomeColor, textcolor=color.white, 
+                                          size=size.tiny, tooltip="Intraday Status: " + outcomeText)
+    
+    // Update existing label if it exists
+    else if not na(day_outcome_label) and (daily_broke_high or daily_broke_low)
+        outcomeText = ""
+        outcomeColor = color.gray
+        
+        if daily_broke_high and daily_broke_low
+            outcomeText := "B"
+            outcomeColor := color.gray
+        else if daily_broke_high
+            if close >= orl
+                outcomeText := "P?"
+                outcomeColor := color.lime
+            else
+                outcomeText := "L?"
+                outcomeColor := color.red
+        else if daily_broke_low
+            if close <= orh
+                outcomeText := "P?"
+                outcomeColor := color.lime
+            else
+                outcomeText := "L?"
+                outcomeColor := color.red
+        
+        if outcomeText != ""
+            day_outcome_label.set_text(outcomeText)
+            day_outcome_label.set_color(outcomeColor)
+            day_outcome_label.set_tooltip("Intraday Status: " + outcomeText)
 
 // Process final session statistics on the very last bar of data
 if barstate.islast and or_token and not session_processed
@@ -299,18 +386,38 @@ if barstate.islast and or_token and not session_processed
         
         if or_range < width_threshold
             width_error_days += 1
+            // Add label for width error at current session's OR high
+            if not na(orh)
+                day_outcome_label := label.new(bar_index, orh + (orh - orl) * 0.1, "W", 
+                                              style=label.style_label_down, color=color.orange, textcolor=color.white, 
+                                              size=size.tiny, tooltip="Width Error: Opening range < 0.2%")
         else
             // Day was tradable, check for breakout outcomes
             if daily_broke_high or daily_broke_low
                 // Win condition: breakout high and close doesn't exceed OR low, OR breakout low and close doesn't exceed OR high
                 if (daily_broke_high and close >= orl) or (daily_broke_low and close <= orh)
                     profit_days += 1
+                    // Add profit label at current session's OR high
+                    if not na(orh)
+                        day_outcome_label := label.new(bar_index, orh + (orh - orl) * 0.1, "P", 
+                                                      style=label.style_label_down, color=color.green, textcolor=color.white, 
+                                                      size=size.tiny, tooltip="Profit Day: Breakout with favorable close")
                 // Loss condition: breakout but close exceeds opposite boundary
                 else if (daily_broke_high and close < orl) or (daily_broke_low and close > orh)
                     loss_days += 1
+                    // Add loss label at current session's OR high
+                    if not na(orh)
+                        day_outcome_label := label.new(bar_index, orh + (orh - orl) * 0.1, "L", 
+                                                      style=label.style_label_down, color=color.red, textcolor=color.white, 
+                                                      size=size.tiny, tooltip="Loss Day: Breakout with unfavorable close")
             else
                 // No breakout occurred - error day
                 error_days += 1
+                // Add error label at current session's OR high
+                if not na(orh)
+                    day_outcome_label := label.new(bar_index, orh + (orh - orl) * 0.1, "E", 
+                                                  style=label.style_label_down, color=color.blue, textcolor=color.white, 
+                                                  size=size.tiny, tooltip="Error Day: No breakout occurred")
 
 //Running outside of OR Session
 if not or_sesh and or_token
