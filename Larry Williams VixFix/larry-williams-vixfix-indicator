@@ -36,6 +36,7 @@ var array<int> btd_entry_bars = array.new<int>()
 var array<float> str_entry_prices = array.new<float>()
 var array<int> str_entry_bars = array.new<int>()
 
+var int total_bars = 0
 var int total_btd_trades = 0
 var int btd_wins = 0
 var int btd_losses = 0
@@ -43,18 +44,31 @@ var int total_str_trades = 0
 var int str_wins = 0
 var int str_losses = 0
 
-// Signal detection logic
-btd_signal = buy1 < 0 or buy2 < 0 or buy3 < 0  // BTD when any buy line is below 0
-str_signal = sell1 > 0 or sell2 > 0 or sell3 > 0  // STR when any sell line is above 0
+// Hierarchical signal detection logic to prevent duplicates
+// Higher timeframes take precedence (132 > 66 > 22)
+btd_signal_132 = buy3 < 0 and not buy3[1] < 0  // New signal on 132-day timeframe
+btd_signal_66 = buy2 < 0 and not buy2[1] < 0 and not btd_signal_132  // New signal on 66-day, but not if 132 already triggered
+btd_signal_22 = buy1 < 0 and not buy1[1] < 0 and not btd_signal_132 and not btd_signal_66  // New signal on 22-day, but not if others triggered
+
+str_signal_132 = sell3 > 0 and not sell3[1] > 0  // New signal on 132-day timeframe
+str_signal_66 = sell2 > 0 and not sell2[1] > 0 and not str_signal_132  // New signal on 66-day, but not if 132 already triggered
+str_signal_22 = sell1 > 0 and not sell1[1] > 0 and not str_signal_132 and not str_signal_66  // New signal on 22-day, but not if others triggered
+
+// Combined signals (no duplicates)
+btd_signal = btd_signal_132 or btd_signal_66 or btd_signal_22
+str_signal = str_signal_132 or str_signal_66 or str_signal_22
+
+// Count total bars for percentage calculations
+total_bars += 1
 
 // Track BTD signals (Buy The Dip)
-if btd_signal and not btd_signal[1]  // New BTD signal
+if btd_signal
     array.push(btd_entry_prices, close)
     array.push(btd_entry_bars, bar_index)
     total_btd_trades += 1
 
 // Track STR signals (Sell The Rip) 
-if str_signal and not str_signal[1]  // New STR signal
+if str_signal
     array.push(str_entry_prices, close)
     array.push(str_entry_bars, bar_index)
     total_str_trades += 1
@@ -102,44 +116,56 @@ if barstate.islast
     // Calculate completed trades and percentages
     completed_btd_trades = btd_wins + btd_losses
     completed_str_trades = str_wins + str_losses
+    pending_btd_trades = array.size(btd_entry_bars)
+    pending_str_trades = array.size(str_entry_bars)
     
+    // Trade count percentages (based on total bars)
+    btd_trade_rate = total_bars > 0 ? math.round((total_btd_trades / total_bars) * 100, 2) : 0.0
+    str_trade_rate = total_bars > 0 ? math.round((total_str_trades / total_bars) * 100, 2) : 0.0
+    
+    // Win/Loss percentages (based on completed trades)
     btd_win_rate = completed_btd_trades > 0 ? math.round((btd_wins / completed_btd_trades) * 100, 2) : 0.0
     btd_loss_rate = completed_btd_trades > 0 ? math.round((btd_losses / completed_btd_trades) * 100, 2) : 0.0
     str_win_rate = completed_str_trades > 0 ? math.round((str_wins / completed_str_trades) * 100, 2) : 0.0
     str_loss_rate = completed_str_trades > 0 ? math.round((str_losses / completed_str_trades) * 100, 2) : 0.0
     
     // Create statistics table
-    stats_table := table.new(position.top_right, 3, 6, bgcolor=color.white, border_width=1, frame_width=1, frame_color=color.gray)
+    stats_table := table.new(position.top_right, 3, 7, bgcolor=color.white, border_width=1, frame_width=1, frame_color=color.gray)
     
     // Headers
     table.cell(stats_table, 0, 0, "VIX Fix Stats", text_color=color.black, text_size=size.normal, bgcolor=color.gray)
     table.cell(stats_table, 1, 0, "BTD", text_color=color.black, text_size=size.normal, bgcolor=color.green)
     table.cell(stats_table, 2, 0, "STR", text_color=color.black, text_size=size.normal, bgcolor=color.red)
     
-    // Total Trades
-    table.cell(stats_table, 0, 1, "Total Trades:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 1, str.tostring(total_btd_trades), text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 2, 1, str.tostring(total_str_trades), text_color=color.black, text_size=size.small)
+    // Total Count (Total bars in chart)
+    table.cell(stats_table, 0, 1, "Total Count:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 1, str.tostring(total_bars), text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 2, 1, str.tostring(total_bars), text_color=color.black, text_size=size.small)
     
-    // Completed Trades
-    table.cell(stats_table, 0, 2, "Completed:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 2, str.tostring(completed_btd_trades), text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 2, 2, str.tostring(completed_str_trades), text_color=color.black, text_size=size.small)
-    
-    // Winning Trades
-    table.cell(stats_table, 0, 3, "Wins:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 3, str.tostring(btd_wins) + " (" + str.tostring(btd_win_rate, "#.##") + "%)", text_color=color.green, text_size=size.small)
-    table.cell(stats_table, 2, 3, str.tostring(str_wins) + " (" + str.tostring(str_win_rate, "#.##") + "%)", text_color=color.green, text_size=size.small)
-    
-    // Losing Trades
-    table.cell(stats_table, 0, 4, "Losses:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 4, str.tostring(btd_losses) + " (" + str.tostring(btd_loss_rate, "#.##") + "%)", text_color=color.red, text_size=size.small)
-    table.cell(stats_table, 2, 4, str.tostring(str_losses) + " (" + str.tostring(str_loss_rate, "#.##") + "%)", text_color=color.red, text_size=size.small)
+    // Trade Count (with percentage of total bars)
+    table.cell(stats_table, 0, 2, "Trade Count:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 2, str.tostring(total_btd_trades) + " (" + str.tostring(btd_trade_rate, "#.##") + "%)", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 2, 2, str.tostring(total_str_trades) + " (" + str.tostring(str_trade_rate, "#.##") + "%)", text_color=color.black, text_size=size.small)
     
     // Pending Trades
-    table.cell(stats_table, 0, 5, "Pending:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 5, str.tostring(array.size(btd_entry_bars)), text_color=color.gray, text_size=size.small)
-    table.cell(stats_table, 2, 5, str.tostring(array.size(str_entry_bars)), text_color=color.gray, text_size=size.small)
+    table.cell(stats_table, 0, 3, "Pending:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 3, str.tostring(pending_btd_trades), text_color=color.gray, text_size=size.small)
+    table.cell(stats_table, 2, 3, str.tostring(pending_str_trades), text_color=color.gray, text_size=size.small)
+    
+    // Profit (with percentage of completed trades)
+    table.cell(stats_table, 0, 4, "Profit:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 4, str.tostring(btd_wins) + " (" + str.tostring(btd_win_rate, "#.##") + "%)", text_color=color.green, text_size=size.small)
+    table.cell(stats_table, 2, 4, str.tostring(str_wins) + " (" + str.tostring(str_win_rate, "#.##") + "%)", text_color=color.green, text_size=size.small)
+    
+    // Loss (with percentage of completed trades)
+    table.cell(stats_table, 0, 5, "Loss:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 5, str.tostring(btd_losses) + " (" + str.tostring(btd_loss_rate, "#.##") + "%)", text_color=color.red, text_size=size.small)
+    table.cell(stats_table, 2, 5, str.tostring(str_losses) + " (" + str.tostring(str_loss_rate, "#.##") + "%)", text_color=color.red, text_size=size.small)
+    
+    // Completed Trades (for reference)
+    table.cell(stats_table, 0, 6, "Completed:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 6, str.tostring(completed_btd_trades), text_color=color.blue, text_size=size.small)
+    table.cell(stats_table, 2, 6, str.tostring(completed_str_trades), text_color=color.blue, text_size=size.small)
 
 // Style line perameters
 hline(0, "Zero Line", color=#FFFFFF, linewidth=1)
