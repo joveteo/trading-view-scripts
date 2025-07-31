@@ -8,10 +8,10 @@ indicator("Opening Range with Breakouts & Targets [LuxAlgo]",shorttitle = "LuxAl
 //Historical Display
 showHist = input.bool(true, title = "Show Historical Data", group = "Historical Display", tooltip = "Displays All Data from Previous Sessions")
 //Opening Range
-orTF = input.timeframe("30", title = "Time Period", group = "Opening Range", tooltip = "Sets the Length of Time used for determining Opening Range.") 
+orTF = input.timeframe("60", title = "Time Period", group = "Opening Range", tooltip = "Sets the Length of Time used for determining Opening Range. Default 1 hour for tradable day detection.") 
 //Custom Range
 crTog = input.bool(false, title = "", inline = "Custom", group = "Custom Range")
-crSesh = input.session("0930-0945", title = "", inline = "Custom", group = "Custom Range")
+crSesh = input.session("0930-1030", title = "", inline = "Custom", group = "Custom Range")
 tz = input.string("UTC-5", title = "", group = "Custom Range", inline = "Custom", options = ["UTC-10", "UTC-8", "UTC-7", "UTC-6", "UTC-5", "UTC-4", "UTC-3", "UTC+0", "UTC+1", "UTC+2", "UTC+3", "UTC+3:30", "UTC+4", "UTC+5", "UTC+5:30", "UTC+5:45", "UTC+6","UTC+6:30", "UTC+7", "UTC+8", "UTC+9", "UTC+9:30", "UTC+10", "UTC+11", "UTC+12", "UTC+12:45", "UTC+13"])
 //Breakout Signals
 sigTog = input.bool(true, title = "Show Breakout Signals", group = "Breakout Signals")
@@ -128,16 +128,17 @@ var target l_ln = target.new(na,na)
 var line m_ln = na
 
 // Enhanced Statistics Variables
-var int total_trading_days = 0
+var int days_counted = 0
+var int width_error_days = 0
 var int profit_days = 0
 var int loss_days = 0
-var int width_error_days = 0
-var int breakout_error_days = 0
-var bool daily_crossed_high = false
-var bool daily_crossed_low = false
+var int error_days = 0
+var bool daily_broke_high = false
+var bool daily_broke_low = false
 var float session_open_price = na
 var table stats_table = na
 var bool session_processed = false
+var bool is_tradable_day = false
 
 //---------------------------------------------------------------------------------------------------------------------}
 //Calculations
@@ -151,8 +152,8 @@ l_src = tSrc == "Close" ? close : low
 
 // Add max_bars_back for optimization as per Pine Script docs
 max_bars_back(close, 500)
-max_bars_back(daily_crossed_high, 100)
-max_bars_back(daily_crossed_low, 100)
+max_bars_back(daily_broke_high, 100)
+max_bars_back(daily_broke_low, 100)
 
 //Establishing When the OR Sesssion is
 
@@ -171,39 +172,39 @@ or_end = or_sesh[1] and not or_sesh
 //On Start of OR Session
 if or_start
     // Process previous session statistics before clearing if this isn't the first session
-    if not session_processed and or_token[1] and total_trading_days >= 0
-        total_trading_days += 1
+    if not session_processed and or_token[1] and days_counted >= 0
+        days_counted += 1
         
         // Use previous bar's values for end-of-session statistics
         prev_close = close[1]
         prev_orh = orh[1] 
         prev_orl = orl[1]
-        prev_crossed_high = daily_crossed_high[1]
-        prev_crossed_low = daily_crossed_low[1]
+        prev_broke_high = daily_broke_high[1]
+        prev_broke_low = daily_broke_low[1]
         prev_session_open = session_open_price[1]
+        prev_tradable = is_tradable_day[1]
         
         // Only process if we have valid opening range data
         if not na(prev_orh) and not na(prev_orl) and prev_orh != prev_orl
-            // Check for width error (price after OR not within 0.2% of day's open)
-            width_threshold = prev_session_open * 0.002 // 0.2%
-            price_range_after_or = math.max(high[1], prev_orh) - math.min(low[1], prev_orl)
-            if price_range_after_or > width_threshold
-                width_error_days += 1
-            
-            // Check for breakout error (price went above/below breakout zones)
-            breakout_upper = prev_orh + (prev_orh - prev_orl) * tPer
-            breakout_lower = prev_orl - (prev_orh - prev_orl) * tPer
-            if high[1] > breakout_upper or low[1] < breakout_lower
-                breakout_error_days += 1
-            
-            // Profit/Loss logic - only if there was a breakout
-            if prev_crossed_high or prev_crossed_low
-                // Profit: crossed high and closed above low, OR crossed low and closed below high
-                if (prev_crossed_high and prev_close > prev_orl) or (prev_crossed_low and prev_close < prev_orh)
-                    profit_days += 1
-                // Loss: crossed high and closed below low, OR crossed low and closed above high  
-                else if (prev_crossed_high and prev_close < prev_orl) or (prev_crossed_low and prev_close > prev_orh)
-                    loss_days += 1
+            // Check if day was tradable (opening price moved 0.2% within OR time period)
+            if not na(prev_session_open)
+                width_threshold = prev_session_open * 0.002 // 0.2%
+                or_range = prev_orh - prev_orl
+                
+                if or_range < width_threshold
+                    width_error_days += 1
+                else
+                    // Day was tradable, check for breakout outcomes
+                    if prev_broke_high or prev_broke_low
+                        // Win condition: breakout high and close doesn't exceed OR low, OR breakout low and close doesn't exceed OR high
+                        if (prev_broke_high and prev_close >= prev_orl) or (prev_broke_low and prev_close <= prev_orh)
+                            profit_days += 1
+                        // Loss condition: breakout but close exceeds opposite boundary
+                        else if (prev_broke_high and prev_close < prev_orl) or (prev_broke_low and prev_close > prev_orh)
+                            loss_days += 1
+                    else
+                        // No breakout occurred - error day
+                        error_days += 1
     
     for targ in up_targs
         if showHist == false
@@ -239,10 +240,11 @@ if or_start
     down_check := true
     
     // Reset daily tracking variables for new session
-    daily_crossed_high := false
-    daily_crossed_low := false
-    session_open_price := close
+    daily_broke_high := false
+    daily_broke_low := false
+    session_open_price := open
     session_processed := false
+    is_tradable_day := false
 
     or_bx := box.new(bar_index,high,bar_index,low, bgcolor = orFillColor, border_width = 0)
 
@@ -270,38 +272,45 @@ if or_end and or_token
 
     day_dir := orm > prev_orm ? 1 : orm < prev_orm ? -1 : 0
     linefill.new(h_ln.ln,l_ln.ln, day_dir == 1 ? greenFill : day_dir == -1 ? redFill : invis)
+    
+    // Check if this is a tradable day (opening range moved 0.2% within specified time)
+    if not na(session_open_price) and not na(orh) and not na(orl)
+        width_threshold = session_open_price * 0.002
+        or_range = orh - orl
+        is_tradable_day := or_range >= width_threshold
 
-// Track crossovers during the session
-if not or_sesh and or_token and not na(orh) and not na(orl)
-    if high > orh and not daily_crossed_high
-        daily_crossed_high := true
-    if low < orl and not daily_crossed_low
-        daily_crossed_low := true
+// Track breakouts during the session (for 1-min close or current timeframe)
+if not or_sesh and or_token and not na(orh) and not na(orl) and is_tradable_day
+    // Check for breakout signals when close goes above/below OR levels
+    if close > orh and not daily_broke_high
+        daily_broke_high := true
+    if close < orl and not daily_broke_low
+        daily_broke_low := true
 
 // Process final session statistics on the very last bar of data
 if barstate.islast and or_token and not session_processed
-    total_trading_days += 1
+    days_counted += 1
     session_processed := true
     
-    // Check for width error on final session
-    if not na(session_open_price)
+    // Check if current session is tradable
+    if not na(session_open_price) and not na(orh) and not na(orl)
         width_threshold = session_open_price * 0.002
-        price_range_after_or = math.max(high, orh) - math.min(low, orl)
-        if price_range_after_or > width_threshold
+        or_range = orh - orl
+        
+        if or_range < width_threshold
             width_error_days += 1
-    
-    // Check for breakout error on final session
-    breakout_upper = orh + (orh - orl) * tPer
-    breakout_lower = orl - (orh - orl) * tPer
-    if high > breakout_upper or low < breakout_lower
-        breakout_error_days += 1
-    
-    // Determine profit or loss for the current/final session
-    if daily_crossed_high or daily_crossed_low
-        if (daily_crossed_high and close > orl) or (daily_crossed_low and close < orh)
-            profit_days += 1
-        else if (daily_crossed_high and close < orl) or (daily_crossed_low and close > orh)
-            loss_days += 1
+        else
+            // Day was tradable, check for breakout outcomes
+            if daily_broke_high or daily_broke_low
+                // Win condition: breakout high and close doesn't exceed OR low, OR breakout low and close doesn't exceed OR high
+                if (daily_broke_high and close >= orl) or (daily_broke_low and close <= orh)
+                    profit_days += 1
+                // Loss condition: breakout but close exceeds opposite boundary
+                else if (daily_broke_high and close < orl) or (daily_broke_low and close > orh)
+                    loss_days += 1
+            else
+                // No breakout occurred - error day
+                error_days += 1
 
 //Running outside of OR Session
 if not or_sesh and or_token
@@ -323,22 +332,22 @@ down_max = get_1up((orl - lst)/(orw*tPer))
 up_cur = math.max(0,get_1up((h_src - orh)/(orw*tPer)))
 down_cur = math.max(0,get_1up((orl - l_src)/(orw*tPer)))
 
-//Signal Calcs
-if  (close > orm and down_check == false)
+//Signal Calcs - only show signals for tradable days
+if is_tradable_day and (close > orm and down_check == false)
     down_check := true
 
 xdown = ta.crossunder(close,orl)
 xdown2 = ta.crossunder(close,orl-orw*tPer)
-if (useBias ? ((day_dir != 1 and xdown) or (day_dir == 1 and xdown2)) : ta.crossunder(close,orl)) and down_check
+if is_tradable_day and (useBias ? ((day_dir != 1 and xdown) or (day_dir == 1 and xdown2)) : ta.crossunder(close,orl)) and down_check
     down_signal := true
     down_check := false
 
-if (close < orm and up_check == false)
+if is_tradable_day and (close < orm and up_check == false)
     up_check := true
 
 xup = ta.crossover(close,orh)
 xup2 = ta.crossover(close,orh+orw*tPer)
-if (useBias ? ((day_dir != -1 and xup) or (day_dir == -1 and xup2)) : ta.crossover(close,orh)) and up_check
+if is_tradable_day and (useBias ? ((day_dir != -1 and xup) or (day_dir == -1 and xup2)) : ta.crossover(close,orh)) and up_check
     up_signal := true
     up_check := false
 
@@ -353,37 +362,37 @@ if barstate.islast
         table.delete(stats_table)
     
     // Calculate percentages with proper error handling
-    profit_rate = total_trading_days > 0 ? math.round((profit_days / total_trading_days) * 100, 2) : 0.0
-    loss_rate = total_trading_days > 0 ? math.round((loss_days / total_trading_days) * 100, 2) : 0.0
-    width_error_rate = total_trading_days > 0 ? math.round((width_error_days / total_trading_days) * 100, 2) : 0.0
-    breakout_error_rate = total_trading_days > 0 ? math.round((breakout_error_days / total_trading_days) * 100, 2) : 0.0
+    width_error_rate = days_counted > 0 ? math.round((width_error_days / days_counted) * 100, 2) : 0.0
+    profit_rate = days_counted > 0 ? math.round((profit_days / days_counted) * 100, 2) : 0.0
+    loss_rate = days_counted > 0 ? math.round((loss_days / days_counted) * 100, 2) : 0.0
+    error_rate = days_counted > 0 ? math.round((error_days / days_counted) * 100, 2) : 0.0
     
-    // Create new table at top right
+    // Create new table at top right with 5 rows
     stats_table := table.new(position.top_right, 2, 6, bgcolor=color.white, border_width=1, frame_width=1, frame_color=color.gray)
     
     // Header
     table.cell(stats_table, 0, 0, "ORB Statistics", text_color=color.black, text_size=size.normal, bgcolor=color.gray)
     table.cell(stats_table, 1, 0, "", text_color=color.black, text_size=size.normal, bgcolor=color.gray)
     
-    // Total Trading Days
-    table.cell(stats_table, 0, 1, "Total Trading Days:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 1, str.tostring(total_trading_days), text_color=color.black, text_size=size.small)
-    
-    // Profit Days
-    table.cell(stats_table, 0, 2, "Profit Days:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 2, str.tostring(profit_days) + " (" + str.tostring(profit_rate, "#.##") + "%)", text_color=color.green, text_size=size.small)
-    
-    // Loss Days
-    table.cell(stats_table, 0, 3, "Loss Days:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 3, str.tostring(loss_days) + " (" + str.tostring(loss_rate, "#.##") + "%)", text_color=color.red, text_size=size.small)
+    // Days Counted
+    table.cell(stats_table, 0, 1, "Days Counted:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 1, str.tostring(days_counted), text_color=color.black, text_size=size.small)
     
     // Width Error Days
-    table.cell(stats_table, 0, 4, "Width Error Days:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 4, str.tostring(width_error_days) + " (" + str.tostring(width_error_rate, "#.##") + "%)", text_color=color.orange, text_size=size.small)
+    table.cell(stats_table, 0, 2, "Width Error:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 2, str.tostring(width_error_days) + " (" + str.tostring(width_error_rate, "#.##") + "%)", text_color=color.orange, text_size=size.small)
     
-    // Breakout Error Days
-    table.cell(stats_table, 0, 5, "Breakout Error Days:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 5, str.tostring(breakout_error_days) + " (" + str.tostring(breakout_error_rate, "#.##") + "%)", text_color=color.blue, text_size=size.small)
+    // Profit Days
+    table.cell(stats_table, 0, 3, "Profit Days:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 3, str.tostring(profit_days) + " (" + str.tostring(profit_rate, "#.##") + "%)", text_color=color.green, text_size=size.small)
+    
+    // Loss Days
+    table.cell(stats_table, 0, 4, "Loss Days:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 4, str.tostring(loss_days) + " (" + str.tostring(loss_rate, "#.##") + "%)", text_color=color.red, text_size=size.small)
+    
+    // Error Days
+    table.cell(stats_table, 0, 5, "Error Days:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 5, str.tostring(error_days) + " (" + str.tostring(error_rate, "#.##") + "%)", text_color=color.blue, text_size=size.small)
 
 //Targets
 if not or_sesh and or_token
@@ -428,8 +437,8 @@ if tDispType == "Adaptive" and tTog
 ma = day_ma(or_start,maType,close,maLen)
 plot(or_start?na:ma, style = plot.style_linebr, color = maColor, display = maTog?display.all:display.none, title = "Moving Average", editable = false)
 
-//Signals
-if up_signal and sigTog
+//Signals - only show on tradable days
+if up_signal and sigTog and is_tradable_day
     signals.push(label.new(bar_index, orl,
       style = label.style_label_center, 
       text = "\n▲", 
@@ -437,7 +446,7 @@ if up_signal and sigTog
       textcolor = upSigColor, 
       size = sigSize))
 
-if down_signal and sigTog
+if down_signal and sigTog and is_tradable_day
     signals.push(label.new(bar_index, orh,
       style = label.style_label_center, 
       text = "▼\n",
