@@ -29,6 +29,118 @@ sell1_cross = ta.cross(sell1, 0)
 sell2_cross = ta.cross(sell2, 0)
 sell3_cross = ta.cross(sell3, 0)
 
+// Enhanced Variables for Statistics Tracking
+var table stats_table = na
+var array<float> btd_entry_prices = array.new<float>()
+var array<int> btd_entry_bars = array.new<int>()
+var array<float> str_entry_prices = array.new<float>()
+var array<int> str_entry_bars = array.new<int>()
+
+var int total_btd_trades = 0
+var int btd_wins = 0
+var int btd_losses = 0
+var int total_str_trades = 0
+var int str_wins = 0
+var int str_losses = 0
+
+// Signal detection logic
+btd_signal = buy1 < 0 or buy2 < 0 or buy3 < 0  // BTD when any buy line is below 0
+str_signal = sell1 > 0 or sell2 > 0 or sell3 > 0  // STR when any sell line is above 0
+
+// Track BTD signals (Buy The Dip)
+if btd_signal and not btd_signal[1]  // New BTD signal
+    array.push(btd_entry_prices, close)
+    array.push(btd_entry_bars, bar_index)
+    total_btd_trades += 1
+
+// Track STR signals (Sell The Rip) 
+if str_signal and not str_signal[1]  // New STR signal
+    array.push(str_entry_prices, close)
+    array.push(str_entry_bars, bar_index)
+    total_str_trades += 1
+
+// Check for completed BTD trades (after 90 trading days)
+if array.size(btd_entry_bars) > 0
+    for i = array.size(btd_entry_bars) - 1 to 0
+        entry_bar = array.get(btd_entry_bars, i)
+        entry_price = array.get(btd_entry_prices, i)
+        
+        // Check if 90 trading days have passed
+        if bar_index - entry_bar >= 90
+            if close > entry_price  // Price closed higher = win
+                btd_wins += 1
+            else  // Price closed lower = loss
+                btd_losses += 1
+            
+            // Remove completed trade from tracking
+            array.remove(btd_entry_bars, i)
+            array.remove(btd_entry_prices, i)
+
+// Check for completed STR trades (after 90 trading days)
+if array.size(str_entry_bars) > 0
+    for i = array.size(str_entry_bars) - 1 to 0
+        entry_bar = array.get(str_entry_bars, i)
+        entry_price = array.get(str_entry_prices, i)
+        
+        // Check if 90 trading days have passed
+        if bar_index - entry_bar >= 90
+            if close < entry_price  // Price closed lower = win for short
+                str_wins += 1
+            else  // Price closed higher = loss for short
+                str_losses += 1
+            
+            // Remove completed trade from tracking
+            array.remove(str_entry_bars, i)
+            array.remove(str_entry_prices, i)
+
+// Statistics Table
+if barstate.islast
+    // Delete existing table
+    if not na(stats_table)
+        table.delete(stats_table)
+    
+    // Calculate completed trades and percentages
+    completed_btd_trades = btd_wins + btd_losses
+    completed_str_trades = str_wins + str_losses
+    
+    btd_win_rate = completed_btd_trades > 0 ? math.round((btd_wins / completed_btd_trades) * 100, 2) : 0.0
+    btd_loss_rate = completed_btd_trades > 0 ? math.round((btd_losses / completed_btd_trades) * 100, 2) : 0.0
+    str_win_rate = completed_str_trades > 0 ? math.round((str_wins / completed_str_trades) * 100, 2) : 0.0
+    str_loss_rate = completed_str_trades > 0 ? math.round((str_losses / completed_str_trades) * 100, 2) : 0.0
+    
+    // Create statistics table
+    stats_table := table.new(position.top_right, 3, 6, bgcolor=color.white, border_width=1, frame_width=1, frame_color=color.gray)
+    
+    // Headers
+    table.cell(stats_table, 0, 0, "VIX Fix Stats", text_color=color.black, text_size=size.normal, bgcolor=color.gray)
+    table.cell(stats_table, 1, 0, "BTD", text_color=color.black, text_size=size.normal, bgcolor=color.green)
+    table.cell(stats_table, 2, 0, "STR", text_color=color.black, text_size=size.normal, bgcolor=color.red)
+    
+    // Total Trades
+    table.cell(stats_table, 0, 1, "Total Trades:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 1, str.tostring(total_btd_trades), text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 2, 1, str.tostring(total_str_trades), text_color=color.black, text_size=size.small)
+    
+    // Completed Trades
+    table.cell(stats_table, 0, 2, "Completed:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 2, str.tostring(completed_btd_trades), text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 2, 2, str.tostring(completed_str_trades), text_color=color.black, text_size=size.small)
+    
+    // Winning Trades
+    table.cell(stats_table, 0, 3, "Wins:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 3, str.tostring(btd_wins) + " (" + str.tostring(btd_win_rate, "#.##") + "%)", text_color=color.green, text_size=size.small)
+    table.cell(stats_table, 2, 3, str.tostring(str_wins) + " (" + str.tostring(str_win_rate, "#.##") + "%)", text_color=color.green, text_size=size.small)
+    
+    // Losing Trades
+    table.cell(stats_table, 0, 4, "Losses:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 4, str.tostring(btd_losses) + " (" + str.tostring(btd_loss_rate, "#.##") + "%)", text_color=color.red, text_size=size.small)
+    table.cell(stats_table, 2, 4, str.tostring(str_losses) + " (" + str.tostring(str_loss_rate, "#.##") + "%)", text_color=color.red, text_size=size.small)
+    
+    // Pending Trades
+    table.cell(stats_table, 0, 5, "Pending:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 5, str.tostring(array.size(btd_entry_bars)), text_color=color.gray, text_size=size.small)
+    table.cell(stats_table, 2, 5, str.tostring(array.size(str_entry_bars)), text_color=color.gray, text_size=size.small)
+
 // Style line perameters
 hline(0, "Zero Line", color=#FFFFFF, linewidth=1)
 plot(buy1, title="Buy1", color=color.new(#00FF00, 60), linewidth=1)
