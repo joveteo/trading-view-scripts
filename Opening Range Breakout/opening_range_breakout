@@ -12,7 +12,7 @@ orTF = input.timeframe("60", title = "Time Period", group = "Opening Range", too
 //Custom Range
 crTog = input.bool(false, title = "", inline = "Custom", group = "Custom Range")
 crSesh = input.session("0930-1030", title = "", inline = "Custom", group = "Custom Range")
-tz = input.string("UTC-5", title = "", group = "Custom Range", inline = "Custom", options = ["UTC-10", "UTC-8", "UTC-7", "UTC-6", "UTC-5", "UTC-4", "UTC-3", "UTC+0", "UTC+1", "UTC+2", "UTC+3", "UTC+3:30", "UTC+4", "UTC+5", "UTC+5:30", "UTC+5:45", "UTC+6","UTC+6:30", "UTC+7", "UTC+8", "UTC+9", "UTC+9:30", "UTC+10", "UTC+11", "UTC+12", "UTC+12:45", "UTC+13"])
+tz = input.string("UTC-5", title = "", group = "Custom Range", inline = "Custom", options = ["UTC-10", "UTC-8", "UTC-7", "UTC-6", "UTC-5", "UTC-4", "UTC-3", "UTC+0", "UTC+1", "UTC+2", "UTC+3", "UTC+3:30", "UTC+4", "UTC+5", "UTC+5:30", "UTC+5:45", "UTC+6", "UTC+6:30", "UTC+7", "UTC+8", "UTC+9", "UTC+9:30", "UTC+10", "UTC+11", "UTC+12", "UTC+12:45", "UTC+13"])
 //Breakout Signals
 sigTog = input.bool(true, title = "Show Breakout Signals", group = "Breakout Signals")
 useBias = input.string("No Bias", title = "Signal Bias", options = ["No Bias","Daily Bias"], group = "Breakout Signals", tooltip = "OR Fill Color is directional based on if the current Day/Session ORM is Above or Below the Previous ORM.\nExamples\nNo Bias: Signals Occur Regardless of OR Color\nDaily Bias: Signals do not fire until Target 1 when Breakout is in opposite direction of OR Color.") == "No Bias" ? false : true
