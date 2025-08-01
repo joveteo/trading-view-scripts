@@ -112,7 +112,7 @@ session_vwap(_start) =>
         sum_pv := 0.0
         sum_v := 0.0
     
-    current_pv = close * volume
+    float current_pv = close * volume
     sum_pv += current_pv
     sum_v += volume
     
@@ -145,8 +145,8 @@ session_supertrend(_start, length, multiplier) =>
     tr_sum += ta.tr
     count += 1
     
-    session_atr = count > 0 ? tr_sum / count : ta.tr
-    hl2_avg = count > 0 ? hl2_sum / count : math.avg(high, low)
+    float session_atr = count > 0 ? tr_sum / count : ta.tr
+    float hl2_avg = count > 0 ? hl2_sum / count : math.avg(high, low)
     
     basic_upper := hl2_avg + (multiplier * session_atr)
     basic_lower := hl2_avg - (multiplier * session_atr)
@@ -177,12 +177,12 @@ session_bb(_start, length, mult) =>
     sum_sq += close * close
     count += 1
     
-    session_sma = count > 0 ? sum_close / count : close
-    variance = count > 1 ? (sum_sq - (sum_close * sum_close / count)) / (count - 1) : 0
-    session_std = math.sqrt(variance)
+    float session_sma = count > 0 ? sum_close / count : close
+    float variance = count > 1 ? (sum_sq - (sum_close * sum_close / count)) / (count - 1) : 0
+    float session_std = math.sqrt(variance)
     
-    upper = session_sma + (mult * session_std)
-    lower = session_sma - (mult * session_std)
+    float upper = session_sma + (mult * session_std)
+    float lower = session_sma - (mult * session_std)
     
     [session_sma, upper, lower]
 
@@ -229,8 +229,8 @@ var box or_bx = na
 var int day_dir = 0
 var down_check = false
 var up_check = false
-down_signal = false
-up_signal = false
+bool down_signal = false
+bool up_signal = false
 
 var target h_ln = target.new(na,na)
 var target l_ln = target.new(na,na)
@@ -256,11 +256,11 @@ var string current_session_status = "Pending"
 //Calculations
 //---------------------------------------------------------------------------------------------------------------------{
 
-orm = math.avg(orh,orl)
-orw = math.abs(orh-orl)    
+float orm = math.avg(orh,orl)
+float orw = math.abs(orh-orl)    
 
-h_src = tSrc == "Close" ? close : high
-l_src = tSrc == "Close" ? close : low
+float h_src = tSrc == "Close" ? close : high
+float l_src = tSrc == "Close" ? close : low
 
 // Add max_bars_back for optimization as per Pine Script docs
 max_bars_back(close, 500)
@@ -269,7 +269,7 @@ max_bars_back(daily_broke_low, 100)
 
 //Establishing When the OR Sesssion is
 
-new_tf = timeframe.change(orTF)
+bool new_tf = timeframe.change(orTF)
 if crTog
     or_sesh := not na(time(timeframe.period, crSesh, tz))
 else 
@@ -278,8 +278,8 @@ else
     else if not session.isfirstbar and new_tf
         or_sesh := false
 
-or_start = or_sesh and not or_sesh[1]
-or_end = or_sesh[1] and not or_sesh
+bool or_start = or_sesh and not or_sesh[1]
+bool or_end = or_sesh[1] and not or_sesh
 
 //On Start of OR Session
 if or_start
@@ -288,20 +288,20 @@ if or_start
         days_counted += 1
         
         // Use previous bar's values for end-of-session statistics
-        prev_close = close[1]
-        prev_orh = orh[1] 
-        prev_orl = orl[1]
-        prev_broke_high = daily_broke_high[1]
-        prev_broke_low = daily_broke_low[1]
-        prev_session_open = session_open_price[1]
-        prev_tradable = is_tradable_day[1]
+        float prev_close = close[1]
+        float prev_orh = orh[1] 
+        float prev_orl = orl[1]
+        bool prev_broke_high = daily_broke_high[1]
+        bool prev_broke_low = daily_broke_low[1]
+        float prev_session_open = session_open_price[1]
+        bool prev_tradable = is_tradable_day[1]
         
         // Only process if we have valid opening range data
         if not na(prev_orh) and not na(prev_orl) and prev_orh != prev_orl
             // Check if day was tradable (opening price moved 0.2% within OR time period)
             if not na(prev_session_open)
-                width_threshold = prev_session_open * 0.002 // 0.2%
-                or_range = prev_orh - prev_orl
+                float width_threshold = prev_session_open * 0.002 // 0.2%
+                float or_range = prev_orh - prev_orl
                 
                 if or_range < width_threshold
                     width_error_days += 1
@@ -414,8 +414,8 @@ if or_end and or_token
     
     // Check if this is a tradable day and show width error immediately after OR session
     if not na(session_open_price) and not na(orh) and not na(orl)
-        width_threshold = session_open_price * 0.002
-        or_range = orh - orl
+        float width_threshold = session_open_price * 0.002
+        float or_range = orh - orl
         is_tradable_day := or_range >= width_threshold
         
         // Show width error immediately after OR session ends
@@ -458,8 +458,8 @@ if barstate.islast and or_token and not session_processed
     
     // Check if current session is tradable
     if not na(session_open_price) and not na(orh) and not na(orl)
-        width_threshold = session_open_price * 0.002
-        or_range = orh - orl
+        float width_threshold = session_open_price * 0.002
+        float or_range = orh - orl
         
         if or_range < width_threshold
             width_error_days += 1
@@ -514,18 +514,18 @@ if h_src > hst
 if l_src < lst
     lst := l_src
 
-up_max = get_1up((hst - orh)/(orw*tPer))
-down_max = get_1up((orl - lst)/(orw*tPer))
+int up_max = get_1up((hst - orh)/(orw*tPer))
+int down_max = get_1up((orl - lst)/(orw*tPer))
 
-up_cur = math.max(0,get_1up((h_src - orh)/(orw*tPer)))
-down_cur = math.max(0,get_1up((orl - l_src)/(orw*tPer)))
+int up_cur = math.max(0,get_1up((h_src - orh)/(orw*tPer)))
+int down_cur = math.max(0,get_1up((orl - l_src)/(orw*tPer)))
 
 //Signal Calcs - only show signals for tradable days
 if is_tradable_day and (close > orm and down_check == false)
     down_check := true
 
-xdown = ta.crossunder(close,orl)
-xdown2 = ta.crossunder(close,orl-orw*tPer)
+bool xdown = ta.crossunder(close,orl)
+bool xdown2 = ta.crossunder(close,orl-orw*tPer)
 if is_tradable_day and (useBias ? ((day_dir != 1 and xdown) or (day_dir == 1 and xdown2)) : ta.crossunder(close,orl)) and down_check
     down_signal := true
     down_check := false
@@ -533,21 +533,31 @@ if is_tradable_day and (useBias ? ((day_dir != 1 and xdown) or (day_dir == 1 and
 if is_tradable_day and (close < orm and up_check == false)
     up_check := true
 
-xup = ta.crossover(close,orh)
-xup2 = ta.crossover(close,orh+orw*tPer)
+bool xup = ta.crossover(close,orh)
+bool xup2 = ta.crossover(close,orh+orw*tPer)
 if is_tradable_day and (useBias ? ((day_dir != -1 and xup) or (day_dir == -1 and xup2)) : ta.crossover(close,orh)) and up_check
     up_signal := true
     up_check := false
 
 // Session Trend Indicators Calculations
-session_sma = showSMA ? day_ma(or_start, "SMA", close, smaLen) : na
-session_ema = showEMA ? day_ma(or_start, "EMA", close, emaLen) : na
-session_rma = showRMA ? day_ma(or_start, "RMA", close, rmaLen) : na
-session_wma = showWMA ? day_ma(or_start, "WMA", close, wmaLen) : na
-session_vwap_val = showVWAP ? session_vwap(or_start) : na
+float session_sma = showSMA ? day_ma(or_start, "SMA", close, smaLen) : na
+float session_ema = showEMA ? day_ma(or_start, "EMA", close, emaLen) : na
+float session_rma = showRMA ? day_ma(or_start, "RMA", close, rmaLen) : na
+float session_wma = showWMA ? day_ma(or_start, "WMA", close, wmaLen) : na
+float session_vwap_val = showVWAP ? session_vwap(or_start) : na
 
-[st_line, st_direction] = showSuperTrend ? session_supertrend(or_start, stLen, stMult) : [na, na]
-[bb_middle, bb_upper, bb_lower] = showBB ? session_bb(or_start, bbLen, bbMult) : [na, na, na]
+// Session SuperTrend calculation
+float st_line = na
+int st_direction = na
+if showSuperTrend
+    [st_line, st_direction] := session_supertrend(or_start, stLen, stMult)
+
+// Session Bollinger Bands calculation  
+float bb_middle = na
+float bb_upper = na
+float bb_lower = na
+if showBB
+    [bb_middle, bb_upper, bb_lower] := session_bb(or_start, bbLen, bbMult)
 
 //---------------------------------------------------------------------------------------------------------------------}
 //Display
@@ -560,13 +570,13 @@ if barstate.islast
         table.delete(stats_table)
     
     // Calculate percentages with proper error handling
-    width_error_rate = days_counted > 0 ? math.round((width_error_days / days_counted) * 100, 2) : 0.0
-    profit_rate = days_counted > 0 ? math.round((profit_days / days_counted) * 100, 2) : 0.0
-    loss_rate = days_counted > 0 ? math.round((loss_days / days_counted) * 100, 2) : 0.0
-    error_rate = days_counted > 0 ? math.round((error_days / days_counted) * 100, 2) : 0.0
+    float width_error_rate = days_counted > 0 ? math.round((width_error_days / days_counted) * 100, 2) : 0.0
+    float profit_rate = days_counted > 0 ? math.round((profit_days / days_counted) * 100, 2) : 0.0
+    float loss_rate = days_counted > 0 ? math.round((loss_days / days_counted) * 100, 2) : 0.0
+    float error_rate = days_counted > 0 ? math.round((error_days / days_counted) * 100, 2) : 0.0
     
     // Determine if we're in an active session
-    is_current_session = or_token and not session_processed
+    bool is_current_session = or_token and not session_processed
     
     // Create new table at top right with 6 rows (added pending row)
     stats_table := table.new(position.top_right, 2, 7, bgcolor=color.white, border_width=1, frame_width=1, frame_color=color.gray)
