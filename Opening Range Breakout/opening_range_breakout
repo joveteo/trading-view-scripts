@@ -24,11 +24,38 @@ tTog = input.bool(true, title = "Show Targets", group = "Targets")
 tPer = input.float(50,minval = 1, title = "Target % of Range", group = "Targets", tooltip = "Uses this % of OR Width to use as the distance for targets.")*0.01
 tSrc = input.string("Close", title = "Target Cross Source", options = ["Close","Highs/Lows"], group = "Targets", tooltip = "Uses this Source to tell the script when a target is hit in order to draw the next target.")
 tDispType = input.string("Adaptive", title = "Target Display", options = ["Adaptive","Extended"], group = "Targets", tooltip = "Adaptive: Displays and hides targets Adaptivly based on the current price.\nExtended: Extends all targets to the current bar and does not hide any targets after generation.")
-//Session Moving Average
-maTog = input.bool(false, title = "", inline = "MA", group = "Session Moving Average")
-maLen = input.int(20, title = "", inline = "MA", group = "Session Moving Average")
-maType = input.string("EMA", title = "", options=["SMA", "EMA", "RMA", "WMA", "VWMA"], inline = "MA", group = "Session Moving Average")
-maColor = input.color(color.orange, title = "", inline = "MA", group = "Session Moving Average", tooltip  = "Moving average resets on the start of each session (at Opening Range Start).")
+
+//Session Trend Indicators
+showSMA = input.bool(false, title = "SMA", group = "Session Trend Indicators", inline = "SMA")
+smaLen = input.int(20, title = "", group = "Session Trend Indicators", inline = "SMA")
+smaColor = input.color(color.blue, title = "", group = "Session Trend Indicators", inline = "SMA")
+
+showEMA = input.bool(false, title = "EMA", group = "Session Trend Indicators", inline = "EMA")
+emaLen = input.int(20, title = "", group = "Session Trend Indicators", inline = "EMA")
+emaColor = input.color(color.orange, title = "", group = "Session Trend Indicators", inline = "EMA")
+
+showRMA = input.bool(false, title = "RMA", group = "Session Trend Indicators", inline = "RMA")
+rmaLen = input.int(20, title = "", group = "Session Trend Indicators", inline = "RMA")
+rmaColor = input.color(color.purple, title = "", group = "Session Trend Indicators", inline = "RMA")
+
+showWMA = input.bool(false, title = "WMA", group = "Session Trend Indicators", inline = "WMA")
+wmaLen = input.int(20, title = "", group = "Session Trend Indicators", inline = "WMA")
+wmaColor = input.color(color.yellow, title = "", group = "Session Trend Indicators", inline = "WMA")
+
+showVWAP = input.bool(false, title = "Session VWAP", group = "Session Trend Indicators", inline = "VWAP")
+vwapColor = input.color(color.red, title = "", group = "Session Trend Indicators", inline = "VWAP")
+
+showSuperTrend = input.bool(false, title = "SuperTrend", group = "Session Trend Indicators", inline = "ST")
+stLen = input.int(10, title = "Length", group = "Session Trend Indicators", inline = "ST")
+stMult = input.float(3.0, title = "Multiplier", group = "Session Trend Indicators", inline = "ST")
+stUpColor = input.color(color.green, title = "Up", group = "Session Trend Indicators", inline = "ST")
+stDownColor = input.color(color.red, title = "Down", group = "Session Trend Indicators", inline = "ST")
+
+showBB = input.bool(false, title = "Bollinger Bands", group = "Session Trend Indicators", inline = "BB")
+bbLen = input.int(20, title = "Length", group = "Session Trend Indicators", inline = "BB")
+bbMult = input.float(2.0, title = "StdDev", group = "Session Trend Indicators", inline = "BB")
+bbColor = input.color(color.gray, title = "", group = "Session Trend Indicators", inline = "BB")
+
 //Style
 green = input.color(color.new(#089981,60), title = " Bull Target Color", group = "Style", inline = "Bull")
 red = input.color(color.new(#f23645,60), title = "Bear Target Color", group = "Style", inline = "Bear")
@@ -73,9 +100,91 @@ day_ma(_start,_type,s,l) =>
         ma := ta.sma(s,v_len)
     if _type == "WMA"
         ma := ta.wma(s,v_len)    
-    if _type == "VWMA"
-        ma := ta.vwma(s,v_len)
     ma
+
+// Session-based VWAP calculation
+session_vwap(_start) =>
+    var float sum_pv = 0.0
+    var float sum_v = 0.0
+    var float vwap_val = na
+    
+    if _start
+        sum_pv := 0.0
+        sum_v := 0.0
+    
+    current_pv = close * volume
+    sum_pv += current_pv
+    sum_v += volume
+    
+    vwap_val := sum_v > 0 ? sum_pv / sum_v : close
+    vwap_val
+
+// Session-based SuperTrend calculation
+session_supertrend(_start, length, multiplier) =>
+    bs_nd = fz(ta.barssince(_start))
+    v_len = bs_nd < length ? bs_nd : length
+    
+    var float hl2_sum = 0.0
+    var float tr_sum = 0.0
+    var int count = 0
+    var float basic_upper = na
+    var float basic_lower = na
+    var float final_upper = na
+    var float final_lower = na
+    var float supertrend = na
+    var int direction = 1
+    
+    if _start
+        hl2_sum := 0.0
+        tr_sum := 0.0
+        count := 0
+        direction := 1
+    
+    // Calculate session-based ATR
+    hl2_sum += math.avg(high, low)
+    tr_sum += ta.tr
+    count += 1
+    
+    session_atr = count > 0 ? tr_sum / count : ta.tr
+    hl2_avg = count > 0 ? hl2_sum / count : math.avg(high, low)
+    
+    basic_upper := hl2_avg + (multiplier * session_atr)
+    basic_lower := hl2_avg - (multiplier * session_atr)
+    
+    final_upper := basic_upper < final_upper[1] or close[1] > final_upper[1] ? basic_upper : final_upper[1]
+    final_lower := basic_lower > final_lower[1] or close[1] < final_lower[1] ? basic_lower : final_lower[1]
+    
+    supertrend := direction == 1 ? final_lower : final_upper
+    direction := close <= final_lower ? 1 : close >= final_upper ? -1 : direction[1]
+    
+    [supertrend, direction]
+
+// Session-based Bollinger Bands
+session_bb(_start, length, mult) =>
+    bs_nd = fz(ta.barssince(_start))
+    v_len = bs_nd < length ? bs_nd : length
+    
+    var float sum_close = 0.0
+    var float sum_sq = 0.0
+    var int count = 0
+    
+    if _start
+        sum_close := 0.0
+        sum_sq := 0.0
+        count := 0
+    
+    sum_close += close
+    sum_sq += close * close
+    count += 1
+    
+    session_sma = count > 0 ? sum_close / count : close
+    variance = count > 1 ? (sum_sq - (sum_close * sum_close / count)) / (count - 1) : 0
+    session_std = math.sqrt(variance)
+    
+    upper = session_sma + (mult * session_std)
+    lower = session_sma - (mult * session_std)
+    
+    [session_sma, upper, lower]
 
 dash() => (bar_index/2 - math.floor(bar_index/2)) > 0
 
@@ -140,6 +249,8 @@ var table stats_table = na
 var bool session_processed = false
 var bool is_tradable_day = false
 var label day_outcome_label = na
+var bool width_error_shown = false
+var string current_session_status = "Pending"
 
 //---------------------------------------------------------------------------------------------------------------------}
 //Calculations
@@ -200,7 +311,7 @@ if or_start
                                  style=label.style_label_down, color=color.orange, textcolor=color.white, 
                                  size=size.tiny, tooltip="Width Error: Opening range < 0.2%")
                 else
-                    // Day was tradable, check for breakout outcomes
+                    // Day was tradable, check for breakout outcomes at end of day only
                     if prev_broke_high or prev_broke_low
                         // Win condition: breakout high and close doesn't exceed OR low, OR breakout low and close doesn't exceed OR high
                         if (prev_broke_high and prev_close >= prev_orl) or (prev_broke_low and prev_close <= prev_orh)
@@ -219,7 +330,7 @@ if or_start
                                          style=label.style_label_down, color=color.red, textcolor=color.white, 
                                          size=size.tiny, tooltip="Loss Day: Breakout with unfavorable close")
                     else
-                        // No breakout occurred - error day
+                        // No breakout occurred - error day (only calculated at day end)
                         error_days += 1
                         // Add error label at previous day's OR high
                         if not na(prev_orh)
@@ -271,6 +382,8 @@ if or_start
     session_open_price := open
     session_processed := false
     is_tradable_day := false
+    width_error_shown := false
+    current_session_status := "Pending"
 
     or_bx := box.new(bar_index,high,bar_index,low, bgcolor = orFillColor, border_width = 0)
 
@@ -299,82 +412,46 @@ if or_end and or_token
     day_dir := orm > prev_orm ? 1 : orm < prev_orm ? -1 : 0
     linefill.new(h_ln.ln,l_ln.ln, day_dir == 1 ? greenFill : day_dir == -1 ? redFill : invis)
     
-    // Check if this is a tradable day (opening range moved 0.2% within specified time)
+    // Check if this is a tradable day and show width error immediately after OR session
     if not na(session_open_price) and not na(orh) and not na(orl)
         width_threshold = session_open_price * 0.002
         or_range = orh - orl
         is_tradable_day := or_range >= width_threshold
+        
+        // Show width error immediately after OR session ends
+        if not is_tradable_day and not width_error_shown
+            day_outcome_label := label.new(bar_index, orh + (orh - orl) * 0.1, "W", 
+                                          style=label.style_label_down, color=color.orange, textcolor=color.white, 
+                                          size=size.tiny, tooltip="Width Error: Opening range < 0.2%")
+            width_error_shown := true
+            current_session_status := "Width Error"
 
 // Track breakouts during the session (for 1-min close or current timeframe)
 if not or_sesh and or_token and not na(orh) and not na(orl) and is_tradable_day
     // Check for breakout signals when close goes above/below OR levels
     if close > orh and not daily_broke_high
         daily_broke_high := true
+        current_session_status := "Broke High"
     if close < orl and not daily_broke_low
         daily_broke_low := true
+        current_session_status := "Broke Low"
     
-    // Update day outcome label in real-time if we can determine the outcome
-    // Only update if we haven't created a final outcome label yet
-    if na(day_outcome_label) and (daily_broke_high or daily_broke_low)
-        // Create a temporary outcome label that will be updated
-        outcomeText = ""
-        outcomeColor = color.gray
-        
-        if daily_broke_high and daily_broke_low
-            // Both breakouts occurred - need to wait for close to determine outcome
-            outcomeText := "B"  // Both breakouts
-            outcomeColor := color.gray
-        else if daily_broke_high
-            // High breakout occurred
-            if close >= orl
-                outcomeText := "P?"  // Potential profit
-                outcomeColor := color.lime
-            else
-                outcomeText := "L?"  // Potential loss  
-                outcomeColor := color.red
-        else if daily_broke_low
-            // Low breakout occurred
-            if close <= orh
-                outcomeText := "P?"  // Potential profit
-                outcomeColor := color.lime
-            else
-                outcomeText := "L?"  // Potential loss
-                outcomeColor := color.red
-        
-        if outcomeText != ""
-            day_outcome_label := label.new(bar_index, orh + (orh - orl) * 0.1, outcomeText, 
-                                          style=label.style_label_down, color=outcomeColor, textcolor=color.white, 
-                                          size=size.tiny, tooltip="Intraday Status: " + outcomeText)
-    
-    // Update existing label if it exists
-    else if not na(day_outcome_label) and (daily_broke_high or daily_broke_low)
-        outcomeText = ""
-        outcomeColor = color.gray
-        
-        if daily_broke_high and daily_broke_low
-            outcomeText := "B"
-            outcomeColor := color.gray
-        else if daily_broke_high
-            if close >= orl
-                outcomeText := "P?"
-                outcomeColor := color.lime
-            else
-                outcomeText := "L?"
-                outcomeColor := color.red
-        else if daily_broke_low
-            if close <= orh
-                outcomeText := "P?"
-                outcomeColor := color.lime
-            else
-                outcomeText := "L?"
-                outcomeColor := color.red
-        
-        if outcomeText != ""
-            day_outcome_label.set_text(outcomeText)
-            day_outcome_label.set_color(outcomeColor)
-            day_outcome_label.set_tooltip("Intraday Status: " + outcomeText)
+    // Update current session status
+    if daily_broke_high and daily_broke_low
+        current_session_status := "Both Breakouts"
+    else if daily_broke_high
+        current_session_status := close >= orl ? "Potential Profit (High)" : "Potential Loss (High)"
+    else if daily_broke_low
+        current_session_status := close <= orh ? "Potential Profit (Low)" : "Potential Loss (Low)"
+    else if not daily_broke_high and not daily_broke_low
+        current_session_status := "No Breakout Yet"
 
-// Process final session statistics on the very last bar of data
+// Only process error days at session end (when new session starts or on last bar)
+if session.islastbar and or_token and not session_processed and is_tradable_day
+    if not daily_broke_high and not daily_broke_low
+        current_session_status := "Error Day (No Breakout)"
+
+// Process final session statistics only at the very end
 if barstate.islast and or_token and not session_processed
     days_counted += 1
     session_processed := true
@@ -386,35 +463,39 @@ if barstate.islast and or_token and not session_processed
         
         if or_range < width_threshold
             width_error_days += 1
+            current_session_status := "Width Error"
             // Add label for width error at current session's OR high
-            if not na(orh)
+            if na(day_outcome_label)
                 day_outcome_label := label.new(bar_index, orh + (orh - orl) * 0.1, "W", 
                                               style=label.style_label_down, color=color.orange, textcolor=color.white, 
                                               size=size.tiny, tooltip="Width Error: Opening range < 0.2%")
         else
-            // Day was tradable, check for breakout outcomes
+            // Day was tradable, check for breakout outcomes (only calculate at day end)
             if daily_broke_high or daily_broke_low
                 // Win condition: breakout high and close doesn't exceed OR low, OR breakout low and close doesn't exceed OR high
                 if (daily_broke_high and close >= orl) or (daily_broke_low and close <= orh)
                     profit_days += 1
+                    current_session_status := "Profit Day"
                     // Add profit label at current session's OR high
-                    if not na(orh)
+                    if na(day_outcome_label)
                         day_outcome_label := label.new(bar_index, orh + (orh - orl) * 0.1, "P", 
                                                       style=label.style_label_down, color=color.green, textcolor=color.white, 
                                                       size=size.tiny, tooltip="Profit Day: Breakout with favorable close")
                 // Loss condition: breakout but close exceeds opposite boundary
                 else if (daily_broke_high and close < orl) or (daily_broke_low and close > orh)
                     loss_days += 1
+                    current_session_status := "Loss Day"
                     // Add loss label at current session's OR high
-                    if not na(orh)
+                    if na(day_outcome_label)
                         day_outcome_label := label.new(bar_index, orh + (orh - orl) * 0.1, "L", 
                                                       style=label.style_label_down, color=color.red, textcolor=color.white, 
                                                       size=size.tiny, tooltip="Loss Day: Breakout with unfavorable close")
             else
                 // No breakout occurred - error day
                 error_days += 1
+                current_session_status := "Error Day"
                 // Add error label at current session's OR high
-                if not na(orh)
+                if na(day_outcome_label)
                     day_outcome_label := label.new(bar_index, orh + (orh - orl) * 0.1, "E", 
                                                   style=label.style_label_down, color=color.blue, textcolor=color.white, 
                                                   size=size.tiny, tooltip="Error Day: No breakout occurred")
@@ -458,6 +539,16 @@ if is_tradable_day and (useBias ? ((day_dir != -1 and xup) or (day_dir == -1 and
     up_signal := true
     up_check := false
 
+// Session Trend Indicators Calculations
+session_sma = showSMA ? day_ma(or_start, "SMA", close, smaLen) : na
+session_ema = showEMA ? day_ma(or_start, "EMA", close, emaLen) : na
+session_rma = showRMA ? day_ma(or_start, "RMA", close, rmaLen) : na
+session_wma = showWMA ? day_ma(or_start, "WMA", close, wmaLen) : na
+session_vwap_val = showVWAP ? session_vwap(or_start) : na
+
+[st_line, st_direction] = showSuperTrend ? session_supertrend(or_start, stLen, stMult) : [na, na]
+[bb_middle, bb_upper, bb_lower] = showBB ? session_bb(or_start, bbLen, bbMult) : [na, na, na]
+
 //---------------------------------------------------------------------------------------------------------------------}
 //Display
 //---------------------------------------------------------------------------------------------------------------------{
@@ -474,8 +565,11 @@ if barstate.islast
     loss_rate = days_counted > 0 ? math.round((loss_days / days_counted) * 100, 2) : 0.0
     error_rate = days_counted > 0 ? math.round((error_days / days_counted) * 100, 2) : 0.0
     
-    // Create new table at top right with 5 rows
-    stats_table := table.new(position.top_right, 2, 6, bgcolor=color.white, border_width=1, frame_width=1, frame_color=color.gray)
+    // Determine if we're in an active session
+    is_current_session = or_token and not session_processed
+    
+    // Create new table at top right with 6 rows (added pending row)
+    stats_table := table.new(position.top_right, 2, 7, bgcolor=color.white, border_width=1, frame_width=1, frame_color=color.gray)
     
     // Header
     table.cell(stats_table, 0, 0, "ORB Statistics", text_color=color.black, text_size=size.normal, bgcolor=color.gray)
@@ -483,23 +577,43 @@ if barstate.islast
     
     // Days Counted
     table.cell(stats_table, 0, 1, "Days Counted:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 1, str.tostring(days_counted), text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 1, str.tostring(days_counted + (is_current_session ? 1 : 0)), text_color=color.black, text_size=size.small)
+    
+    // Pending (Current Session Status)
+    table.cell(stats_table, 0, 2, "Current Status:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 2, is_current_session ? current_session_status : "Market Closed", text_color=color.blue, text_size=size.small)
     
     // Width Error Days
-    table.cell(stats_table, 0, 2, "Width Error:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 2, str.tostring(width_error_days) + " (" + str.tostring(width_error_rate, "#.##") + "%)", text_color=color.orange, text_size=size.small)
+    table.cell(stats_table, 0, 3, "Width Error:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 3, str.tostring(width_error_days) + " (" + str.tostring(width_error_rate, "#.##") + "%)", text_color=color.orange, text_size=size.small)
     
     // Profit Days
-    table.cell(stats_table, 0, 3, "Profit Days:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 3, str.tostring(profit_days) + " (" + str.tostring(profit_rate, "#.##") + "%)", text_color=color.green, text_size=size.small)
+    table.cell(stats_table, 0, 4, "Profit Days:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 4, str.tostring(profit_days) + " (" + str.tostring(profit_rate, "#.##") + "%)", text_color=color.green, text_size=size.small)
     
     // Loss Days
-    table.cell(stats_table, 0, 4, "Loss Days:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 4, str.tostring(loss_days) + " (" + str.tostring(loss_rate, "#.##") + "%)", text_color=color.red, text_size=size.small)
+    table.cell(stats_table, 0, 5, "Loss Days:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 5, str.tostring(loss_days) + " (" + str.tostring(loss_rate, "#.##") + "%)", text_color=color.red, text_size=size.small)
     
     // Error Days
-    table.cell(stats_table, 0, 5, "Error Days:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 5, str.tostring(error_days) + " (" + str.tostring(error_rate, "#.##") + "%)", text_color=color.blue, text_size=size.small)
+    table.cell(stats_table, 0, 6, "Error Days:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 6, str.tostring(error_days) + " (" + str.tostring(error_rate, "#.##") + "%)", text_color=color.blue, text_size=size.small)
+
+//Session Trend Indicators Plots
+plot(or_start ? na : session_sma, "Session SMA", color=showSMA ? smaColor : na, linewidth=2)
+plot(or_start ? na : session_ema, "Session EMA", color=showEMA ? emaColor : na, linewidth=2)
+plot(or_start ? na : session_rma, "Session RMA", color=showRMA ? rmaColor : na, linewidth=2)
+plot(or_start ? na : session_wma, "Session WMA", color=showWMA ? wmaColor : na, linewidth=2)
+plot(or_start ? na : session_vwap_val, "Session VWAP", color=showVWAP ? vwapColor : na, linewidth=2)
+
+// SuperTrend
+plot(or_start ? na : (showSuperTrend ? st_line : na), "SuperTrend", color=showSuperTrend ? (st_direction == 1 ? stUpColor : stDownColor) : na, linewidth=2)
+
+// Bollinger Bands
+plot(or_start ? na : bb_middle, "BB Middle", color=showBB ? bbColor : na, linewidth=1)
+plot(or_start ? na : bb_upper, "BB Upper", color=showBB ? bbColor : na, linewidth=1)
+plot(or_start ? na : bb_lower, "BB Lower", color=showBB ? bbColor : na, linewidth=1)
+fill(plot(or_start ? na : bb_upper), plot(or_start ? na : bb_lower), color=showBB ? color.new(bbColor, 90) : na, title="BB Fill")
 
 //Targets
 if not or_sesh and or_token
@@ -538,11 +652,6 @@ if tDispType == "Adaptive" and tTog
         if targ.ln.get_y1() <= (orl-(orw*tPer*(down_cur-2))) and targ.ln.get_y1() >= (orl-(orw*tPer*(down_cur)))
             targ.ln.set_x2(bar_index+1)
             targ.lab.set_x(bar_index+1)
-
-
-//Moving Average
-ma = day_ma(or_start,maType,close,maLen)
-plot(or_start?na:ma, style = plot.style_linebr, color = maColor, display = maTog?display.all:display.none, title = "Moving Average", editable = false)
 
 //Signals - only show on tradable days
 if up_signal and sigTog and is_tradable_day
