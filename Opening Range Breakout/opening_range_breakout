@@ -66,7 +66,7 @@ orFillColor = input.color(color.new(color.gray,60), title = "OR Highlight Color"
 tStyle = input.string("___", title = "Target Style", options = ["___","- - -",". . ."], group = "Style")
 txtSize = str.lower(input.string("Small", title = "Text Size", options = ["Tiny","Small","Normal","Large","Huge"], group = "Style"))
 
-invis = color.rgb(0,0,0,100)
+color invis = color.rgb(0,0,0,100)
 //---------------------------------------------------------------------------------------------------------------------}
 //Error
 //---------------------------------------------------------------------------------------------------------------------{
@@ -547,15 +547,15 @@ float session_wma = showWMA ? day_ma(or_start, "WMA", close, wmaLen) : na
 float session_vwap_val = showVWAP ? session_vwap(or_start) : na
 
 // Session SuperTrend calculation
-float st_line = na
-int st_direction = na
+var float st_line = na
+var int st_direction = na
 if showSuperTrend
     [st_line, st_direction] := session_supertrend(or_start, stLen, stMult)
 
 // Session Bollinger Bands calculation  
-float bb_middle = na
-float bb_upper = na
-float bb_lower = na
+var float bb_middle = na
+var float bb_upper = na
+var float bb_lower = na
 if showBB
     [bb_middle, bb_upper, bb_lower] := session_bb(or_start, bbLen, bbMult)
 
