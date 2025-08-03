@@ -1,8 +1,8 @@
 # Opening Range Breakout (ORB) Indicator
 
-A comprehensive TradingView Pine Script indicator that identifies and tracks opening range breakouts with customizable duration, statistics tracking, and alert functionality.
+A comprehensive TradingView Pine Script indicator that identifies and tracks opening range breakouts with customizable duration, advanced statistics tracking, dynamic visual feedback, and comprehensive session trend analysis.
 
-> **✅ LATEST UPDATE (v1.4):** Fixed global variable error and updated to Pine Script v6 - fully functional and bug-free!
+> **✅ LATEST UPDATE:** Enhanced with customizable session colors, table visibility controls, improved breakout logic, and Pine Script v6 compliance - fully functional and optimized!
 
 ## 📋 Overview
 
@@ -14,24 +14,29 @@ The Opening Range Breakout indicator captures the high and low of the first N mi
 - **Customizable Duration**: Set opening range from 1 to 480 minutes
 - **Automatic Session Detection**: Works with any market session and timezone
 - **Real-time Tracking**: Monitors breakouts as they happen
+- **Enhanced Breakout Logic**: Handles multiple breakouts with first-signal priority
 - **Statistical Analysis**: Tracks success rates and patterns over time
 
-### Visual Elements
-- **Range Lines**: Green line for high, red line for low (88% transparent by default)
-- **Breakout Signals**: Triangle markers when price crosses range boundaries
-- **Statistics Display**: Real-time table showing performance metrics
-- **Customizable Transparency**: Adjust line transparency from 0-100%
+### Visual Elements & Customization
+- **Dynamic Range Fill**: Color-coded area between opening range lines based on session status
+- **Customizable Session Colors**: Full control over width error, profit, loss, and error day colors
+- **Session Trend Indicators**: SMA, EMA, RMA, WMA, and Anchor VWAP options
+- **Outcome Labels**: Clear day markers (W/P/L/E) with custom color coding
+- **Flexible Table Display**: Show/hide statistics table for cleaner charts
+- **Range Lines**: Customizable colors and transparency for high/low lines
 
-### Analytics & Statistics
-- **Total Days Tracked**: Complete count of analyzed trading sessions
-- **Success Rate**: Percentage of days price stayed within the range
-- **Both Sides Crossed**: Days where price exceeded both high and low
-- **Performance Percentages**: Detailed breakdown with percentages
+### Advanced Analytics & Statistics
+- **Performance Categorization**: Width error, profit, loss, and error day tracking
+- **Enhanced Statistics Table**: Color-coordinated metrics with custom colors
+- **Percentage Breakdowns**: Detailed success rate analysis with visual feedback
+- **First Breakout Priority**: Accurate profit/loss calculation when both levels are hit
+- **Mobile-Friendly**: Optional table hiding for mobile chart viewing
 
-### Alert System
-- **Sound Alerts**: Optional audio notifications on breakouts
-- **Multiple Alert Types**: Separate alerts for high/low breakouts
-- **Customizable Messages**: Clear breakout notifications with price levels
+### Session Trend Analysis
+- **Multiple Moving Averages**: SMA, EMA, RMA, WMA with customizable periods
+- **Anchor VWAP**: Session-based VWAP anchored to daily opening price
+- **Trend Direction Indicators**: Visual confirmation of session bias
+- **Customizable Colors**: Match trend indicators to your color scheme
 
 ## 🚀 Installation
 
@@ -45,15 +50,36 @@ The Opening Range Breakout indicator captures the high and low of the first N mi
 
 ### Input Parameters
 
+#### Core Settings
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | Opening Range Duration | Integer | 60 | Duration in minutes for the opening range (1-480) |
-| Show Opening Range Lines | Boolean | true | Display range lines on chart |
-| Show Statistics | Boolean | true | Display statistics table |
-| Line Transparency | Integer | 88 | Transparency percentage for range lines (0-100) |
-| Enable Breakout Alerts | Boolean | true | Enable sound alerts for breakouts |
 | Trading Session | Session | 0930-1600 | Market session times (HHMM-HHMM format) |
 | Session Timezone | String | America/New_York | Timezone for the trading session |
+| Show Historical Data | Boolean | true | Display data from previous sessions |
+
+#### Visual Controls
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Show Statistics Table | Boolean | true | Display/hide statistics table for mobile compatibility |
+| Show Opening Range Lines | Boolean | true | Display range lines on chart |
+| Line Transparency | Integer | 88 | Transparency percentage for range lines (0-100) |
+
+#### Session Status Colors
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Width Error Color | Color | Yellow | Color for days with opening range < 0.2% of open price |
+| Profit Color | Color | Green | Color for profitable breakout days |
+| Loss Color | Color | Red | Color for loss breakout days |
+| Error Color | Color | Blue | Color for days with no breakout |
+
+#### Session Trend Indicators
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Show SMA/EMA/RMA/WMA | Boolean | false | Enable various moving averages |
+| MA Lengths | Integer | 20 | Period for moving average calculations |
+| Show Anchor VWAP | Boolean | false | Display VWAP anchored to daily open |
+| Indicator Colors | Color | Various | Customizable colors for trend indicators |
 
 ### Recommended Settings
 
@@ -74,16 +100,29 @@ The Opening Range Breakout indicator captures the high and low of the first N mi
 
 ## 📊 Understanding the Statistics
 
-The indicator tracks three key metrics:
+The indicator tracks four key session outcomes with color-coded visual feedback:
 
-1. **Stayed Within Range**: Days where price never broke above the high or below the low
-2. **Crossed Both Ends**: Days where price broke both the high and low during the session
-3. **Other Outcomes**: Days with partial breakouts (only one side crossed)
+### 📋 Session Categories
+
+1. **🟡 Width Error Days**: Opening range width < 0.2% of opening price (insufficient volatility)
+2. **🟢 Profit Days**: Breakout occurred with favorable price movement beyond the range
+3. **🔴 Loss Days**: Breakout occurred but price reversed unfavorably
+4. **🔵 Error Days**: No breakout occurred during the session
+
+### 📈 Enhanced Analytics
+
+- **First Breakout Priority**: When both high and low are hit, profit/loss calculated from first signal
+- **Dynamic Range Fill**: Area between OR lines colored based on session outcome
+- **Color-Coordinated Table**: Statistics table uses matching custom colors for easy identification
+- **Performance Percentages**: Detailed breakdown with visual color feedback
+
+### 💡 Strategic Insights
 
 These statistics help traders understand:
-- Market volatility patterns
-- Success rates for range-based strategies
-- Optimal duration settings for different instruments
+- **Market Volatility Patterns**: Identify high/low volatility periods
+- **Breakout Success Rates**: Optimize entry timing and position sizing
+- **Range Efficiency**: Find optimal opening range duration for different instruments
+- **Session Bias**: Recognize directional tendencies in specific market conditions
 
 ## 🔔 Setting Up Alerts
 
@@ -96,22 +135,69 @@ These statistics help traders understand:
 4. Configure notification preferences
 5. Set alert frequency as needed
 
-## 📈 Usage Strategies
+## 🎯 Recommended Trading Actions
+
+> **⚠️ IMPORTANT DISCLAIMER**: The following are educational examples only. Always implement proper risk management with stop losses and take profits. See [DISCLAIMER.md](../DISCLAIMER.md) for full legal disclaimers. The author is not liable for any trading decisions or outcomes.
+
+### 📈 Breakout Scenarios & Suggested Responses
+
+#### 🔴 Opening Range High Breakout
+**Potential Action**: Consider selling put spreads or put options
+- **Logic**: Upward momentum suggests bullish continuation
+- **Risk Management**: Set stop loss below opening range low
+- **Take Profit**: Target 1-2x opening range width above breakout
+
+#### 🔵 Opening Range Low Breakout  
+**Potential Action**: Consider selling call spreads or call options
+- **Logic**: Downward momentum suggests bearish continuation
+- **Risk Management**: Set stop loss above opening range high
+- **Take Profit**: Target 1-2x opening range width below breakout
+
+#### 🟡 Width Error Days
+**Potential Action**: Avoid trading or use range-bound strategies
+- **Logic**: Insufficient volatility for meaningful breakouts
+- **Alternative**: Consider iron condors or strangles
+
+### 📊 Statistical-Based Decisions
+
+- **High Profit Rate Markets**: More aggressive position sizing
+- **High Error Rate Markets**: Focus on range-bound strategies
+- **Consistent Breakout Direction**: Bias trades toward historical tendency
+
+## 🛡️ Critical Risk Management
+
+### ✅ Essential Requirements
+- **Stop Losses**: Always use stops at opening range boundaries
+- **Position Sizing**: Never risk more than 1-2% of account per trade
+- **Take Profits**: Set realistic targets based on historical range data
+- **Time Limits**: Close positions before market close or set time
+- **Volatility Awareness**: Adjust strategies based on width error frequency
+
+### ⛔ Trading Warnings
+- **Not Financial Advice**: These are educational examples only
+- **Individual Responsibility**: All trading decisions are your own
+- **Risk Disclosure**: Trading involves substantial risk of loss
+- **Professional Advice**: Consult licensed advisors for personalized guidance
+
+## 📈 Usage Strategies by Trader Type
 
 ### For Options Traders
-- Use breakout signals to time vertical spread entries
-- Monitor statistics to optimize opening range duration
-- Set alerts to catch breakouts early in the session
+- **Vertical Spreads**: Use breakout signals for directional spread entries
+- **Premium Collection**: Sell options on the opposite side of breakouts
+- **Statistics Optimization**: Monitor success rates to refine opening range duration
+- **Alert-Based Timing**: Set alerts to catch early breakout opportunities
 
 ### For Day Traders
-- Identify key support/resistance levels early in the session
-- Use range boundaries for entry/exit signals
-- Track breakout momentum for trend following
+- **Support/Resistance**: Use range boundaries as key levels
+- **Momentum Trading**: Follow breakout direction with proper stops
+- **Scalping Opportunities**: Trade bounces off opening range levels
+- **Trend Confirmation**: Use session indicators to confirm directional bias
 
 ### For Swing Traders
-- Identify daily volatility patterns
-- Use opening range as baseline for position sizing
-- Monitor breakout frequency for market regime changes
+- **Daily Bias**: Use opening range breakouts to establish daily market sentiment
+- **Position Sizing**: Scale positions based on opening range width and volatility
+- **Regime Recognition**: Monitor breakout frequency for market condition changes
+- **Multi-Day Patterns**: Track consecutive breakout directions for longer-term bias
 
 ## 🔧 Technical Requirements
 
@@ -146,13 +232,13 @@ These statistics help traders understand:
 - Verify TradingView alert settings
 - Check that you have a TradingView Pro account
 
-## 📋 Version History
+## 📋 Recent Enhancements
 
-- **v1.0**: Initial release with core ORB functionality
-- **v1.1**: Added statistics tracking and performance metrics
-- **v1.2**: Enhanced alert system with multiple breakout types
-- **v1.3**: Improved session detection and timezone handling
-- **v1.4**: **FIXED** - Global variable error and updated to Pine Script v6
+- **Enhanced Color System**: Full customization of session status colors with dynamic visual feedback
+- **Table Visibility Control**: Show/hide statistics table for mobile-friendly viewing
+- **Improved Breakout Logic**: First-signal priority for accurate profit/loss calculation when both levels are hit
+- **Session Trend Analysis**: Multiple moving averages and Anchor VWAP for comprehensive market analysis
+- **Pine Script v6 Compliance**: Fully updated and optimized for latest TradingView standards
 
 ## 🤝 Contributing
 

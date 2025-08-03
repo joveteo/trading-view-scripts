@@ -4,180 +4,204 @@
 // © iLanat8
 //@version=6
 
-indicator(title = "Larry Williams VixFix", shorttitle = "L.W VixFix" , precision = 2)
+indicator(title = "Larry Williams VixFix", shorttitle = "L.W VixFix", precision = 2)
 
-// Input parameters
-length1 = input.int(title="Length 1", defval = 22, tooltip = "Average number of trading days in 1 month")
-length2 = input.int(title="Length 2", defval = 66, tooltip = "Average number of trading days in 3 month")
-length3 = input.int(title="Length 3", defval = 132, tooltip = "Average number of trading days in 6 month")
+// =============================================================================
+// INPUT PARAMETERS
+// =============================================================================
 
-// Calculations
+// Calculation Periods
+length1 = input.int(title="Length 1", defval=22, minval=1, maxval=500, tooltip="Average number of trading days in 1 month. Controls short-term volatility calculation.")
+length2 = input.int(title="Length 2", defval=66, minval=1, maxval=500, tooltip="Average number of trading days in 3 months. Controls medium-term volatility calculation.")
+length3 = input.int(title="Length 3", defval=132, minval=1, maxval=500, tooltip="Average number of trading days in 6 months. Controls long-term volatility calculation.")
+
+// Statistics Configuration
+showTable = input.bool(title="Show Statistics Table", defval=true, group="Statistics", tooltip="Display/hide the statistics table. Disable for mobile or cleaner chart view.")
+tradeDuration = input.int(title="Trade Duration (Days)", defval=30, minval=5, maxval=250, group="Statistics", tooltip="Number of trading days to wait before evaluating trade success. Default: 30 days (was 90 in original).")
+
+// =============================================================================
+// CORE CALCULATIONS
+// =============================================================================
+
+// VixFix calculations for Buy signals
 buy1 = ((high - ta.lowest(close[1], length1)) / ta.lowest(close[1], length1)) * 100
 buy2 = ((high - ta.lowest(close[1], length2)) / ta.lowest(close[1], length2)) * 100
 buy3 = ((high - ta.lowest(close[1], length3)) / ta.lowest(close[1], length3)) * 100
+
+// Inverse VixFix calculations for Sell signals
 sell1 = ((low - ta.highest(close[1], length1)) / ta.highest(close[1], length1)) * 100
 sell2 = ((low - ta.highest(close[1], length2)) / ta.highest(close[1], length2)) * 100
 sell3 = ((low - ta.highest(close[1], length3)) / ta.highest(close[1], length3)) * 100
 
-// Detect zero crossings for buy lines
-buy1_cross = ta.cross(buy1, 0)
-buy2_cross = ta.cross(buy2, 0)
-buy3_cross = ta.cross(buy3, 0)
+// =============================================================================
+// STATISTICS TRACKING VARIABLES
+// =============================================================================
 
-// Detect zero crossings for sell lines
-sell1_cross = ta.cross(sell1, 0)
-sell2_cross = ta.cross(sell2, 0)
-sell3_cross = ta.cross(sell3, 0)
-
-// Enhanced Variables for Statistics Tracking
+// Table and tracking arrays
 var table stats_table = na
-var array<float> btd_entry_prices = array.new<float>()
-var array<int> btd_entry_bars = array.new<int>()
-var array<float> str_entry_prices = array.new<float>()
-var array<int> str_entry_bars = array.new<int>()
+var array<float> buy_entry_prices = array.new<float>()
+var array<int> buy_entry_bars = array.new<int>()
+var array<float> sell_entry_prices = array.new<float>()
+var array<int> sell_entry_bars = array.new<int>()
 
+// Performance counters
 var int total_bars = 0
-var int total_btd_trades = 0
-var int btd_wins = 0
-var int btd_losses = 0
-var int total_str_trades = 0
-var int str_wins = 0
-var int str_losses = 0
+var int total_buy_trades = 0
+var int buy_wins = 0
+var int buy_losses = 0
+var int total_sell_trades = 0
+var int sell_wins = 0
+var int sell_losses = 0
 
-// Hierarchical signal detection logic to prevent duplicates
+// =============================================================================
+// SIGNAL DETECTION LOGIC
+// =============================================================================
+
+// Hierarchical signal detection to prevent duplicates
 // Higher timeframes take precedence (132 > 66 > 22)
-btd_signal_132 = buy3 < 0 and not buy3[1] < 0  // New signal on 132-day timeframe
-btd_signal_66 = buy2 < 0 and not buy2[1] < 0 and not btd_signal_132  // New signal on 66-day, but not if 132 already triggered
-btd_signal_22 = buy1 < 0 and not buy1[1] < 0 and not btd_signal_132 and not btd_signal_66  // New signal on 22-day, but not if others triggered
+buy_signal_132 = buy3 < 0 and buy3[1] >= 0  // New signal on 132-day timeframe
+buy_signal_66 = buy2 < 0 and buy2[1] >= 0 and not buy_signal_132  // New signal on 66-day, but not if 132 already triggered
+buy_signal_22 = buy1 < 0 and buy1[1] >= 0 and not buy_signal_132 and not buy_signal_66  // New signal on 22-day, but not if others triggered
 
-str_signal_132 = sell3 > 0 and not sell3[1] > 0  // New signal on 132-day timeframe
-str_signal_66 = sell2 > 0 and not sell2[1] > 0 and not str_signal_132  // New signal on 66-day, but not if 132 already triggered
-str_signal_22 = sell1 > 0 and not sell1[1] > 0 and not str_signal_132 and not str_signal_66  // New signal on 22-day, but not if others triggered
+sell_signal_132 = sell3 > 0 and sell3[1] <= 0  // New signal on 132-day timeframe
+sell_signal_66 = sell2 > 0 and sell2[1] <= 0 and not sell_signal_132  // New signal on 66-day, but not if 132 already triggered
+sell_signal_22 = sell1 > 0 and sell1[1] <= 0 and not sell_signal_132 and not sell_signal_66  // New signal on 22-day, but not if others triggered
 
 // Combined signals (no duplicates)
-btd_signal = btd_signal_132 or btd_signal_66 or btd_signal_22
-str_signal = str_signal_132 or str_signal_66 or str_signal_22
+buy_signal = buy_signal_132 or buy_signal_66 or buy_signal_22
+sell_signal = sell_signal_132 or sell_signal_66 or sell_signal_22
+
+// =============================================================================
+// TRADE TRACKING & STATISTICS
+// =============================================================================
 
 // Count total bars for percentage calculations
 total_bars += 1
 
-// Track BTD signals (Buy The Dip)
-if btd_signal
-    array.push(btd_entry_prices, close)
-    array.push(btd_entry_bars, bar_index)
-    total_btd_trades += 1
+// Track Buy signals
+if buy_signal
+    array.push(buy_entry_prices, close)
+    array.push(buy_entry_bars, bar_index)
+    total_buy_trades += 1
 
-// Track STR signals (Sell The Rip) 
-if str_signal
-    array.push(str_entry_prices, close)
-    array.push(str_entry_bars, bar_index)
-    total_str_trades += 1
+// Track Sell signals
+if sell_signal
+    array.push(sell_entry_prices, close)
+    array.push(sell_entry_bars, bar_index)
+    total_sell_trades += 1
 
-// Check for completed BTD trades (after 90 trading days)
-if array.size(btd_entry_bars) > 0
-    for i = array.size(btd_entry_bars) - 1 to 0
-        entry_bar = array.get(btd_entry_bars, i)
-        entry_price = array.get(btd_entry_prices, i)
+// Check for completed Buy trades (configurable duration)
+if array.size(buy_entry_bars) > 0
+    for i = array.size(buy_entry_bars) - 1 to 0
+        entry_bar = array.get(buy_entry_bars, i)
+        entry_price = array.get(buy_entry_prices, i)
         
-        // Check if 90 trading days have passed
-        if bar_index - entry_bar >= 90
+        // Check if configured trading days have passed
+        if bar_index - entry_bar >= tradeDuration
             if close > entry_price  // Price closed higher = win
-                btd_wins += 1
+                buy_wins += 1
             else  // Price closed lower = loss
-                btd_losses += 1
+                buy_losses += 1
             
             // Remove completed trade from tracking
-            array.remove(btd_entry_bars, i)
-            array.remove(btd_entry_prices, i)
+            array.remove(buy_entry_bars, i)
+            array.remove(buy_entry_prices, i)
 
-// Check for completed STR trades (after 90 trading days)
-if array.size(str_entry_bars) > 0
-    for i = array.size(str_entry_bars) - 1 to 0
-        entry_bar = array.get(str_entry_bars, i)
-        entry_price = array.get(str_entry_prices, i)
+// Check for completed Sell trades (configurable duration)
+if array.size(sell_entry_bars) > 0
+    for i = array.size(sell_entry_bars) - 1 to 0
+        entry_bar = array.get(sell_entry_bars, i)
+        entry_price = array.get(sell_entry_prices, i)
         
-        // Check if 90 trading days have passed
-        if bar_index - entry_bar >= 90
+        // Check if configured trading days have passed
+        if bar_index - entry_bar >= tradeDuration
             if close < entry_price  // Price closed lower = win for short
-                str_wins += 1
+                sell_wins += 1
             else  // Price closed higher = loss for short
-                str_losses += 1
+                sell_losses += 1
             
             // Remove completed trade from tracking
-            array.remove(str_entry_bars, i)
-            array.remove(str_entry_prices, i)
+            array.remove(sell_entry_bars, i)
+            array.remove(sell_entry_prices, i)
 
-// Statistics Table
-if barstate.islast
+// =============================================================================
+// STATISTICS TABLE DISPLAY
+// =============================================================================
+
+if barstate.islast and showTable
     // Delete existing table
     if not na(stats_table)
         table.delete(stats_table)
     
     // Calculate completed trades and percentages
-    completed_btd_trades = btd_wins + btd_losses
-    completed_str_trades = str_wins + str_losses
-    pending_btd_trades = array.size(btd_entry_bars)
-    pending_str_trades = array.size(str_entry_bars)
+    completed_buy_trades = buy_wins + buy_losses
+    completed_sell_trades = sell_wins + sell_losses
     
     // Trade count percentages (based on total bars)
-    btd_trade_rate = total_bars > 0 ? math.round((total_btd_trades / total_bars) * 100, 2) : 0.0
-    str_trade_rate = total_bars > 0 ? math.round((total_str_trades / total_bars) * 100, 2) : 0.0
+    buy_trade_rate = total_bars > 0 ? math.round((total_buy_trades / total_bars) * 100, 2) : 0.0
+    sell_trade_rate = total_bars > 0 ? math.round((total_sell_trades / total_bars) * 100, 2) : 0.0
     
     // Win/Loss percentages (based on completed trades)
-    btd_win_rate = completed_btd_trades > 0 ? math.round((btd_wins / completed_btd_trades) * 100, 2) : 0.0
-    btd_loss_rate = completed_btd_trades > 0 ? math.round((btd_losses / completed_btd_trades) * 100, 2) : 0.0
-    str_win_rate = completed_str_trades > 0 ? math.round((str_wins / completed_str_trades) * 100, 2) : 0.0
-    str_loss_rate = completed_str_trades > 0 ? math.round((str_losses / completed_str_trades) * 100, 2) : 0.0
+    buy_win_rate = completed_buy_trades > 0 ? math.round((buy_wins / completed_buy_trades) * 100, 2) : 0.0
+    buy_loss_rate = completed_buy_trades > 0 ? math.round((buy_losses / completed_buy_trades) * 100, 2) : 0.0
+    sell_win_rate = completed_sell_trades > 0 ? math.round((sell_wins / completed_sell_trades) * 100, 2) : 0.0
+    sell_loss_rate = completed_sell_trades > 0 ? math.round((sell_losses / completed_sell_trades) * 100, 2) : 0.0
     
     // Create statistics table
-    stats_table := table.new(position.top_right, 3, 7, bgcolor=color.white, border_width=1, frame_width=1, frame_color=color.gray)
+    stats_table := table.new(position.top_right, 3, 5, bgcolor=color.white, border_width=1, frame_width=1, frame_color=color.gray)
     
     // Headers
     table.cell(stats_table, 0, 0, "VIX Fix Stats", text_color=color.black, text_size=size.normal, bgcolor=color.gray)
-    table.cell(stats_table, 1, 0, "BTD", text_color=color.black, text_size=size.normal, bgcolor=color.green)
-    table.cell(stats_table, 2, 0, "STR", text_color=color.black, text_size=size.normal, bgcolor=color.red)
+    table.cell(stats_table, 1, 0, "Buy", text_color=color.white, text_size=size.normal, bgcolor=color.green)
+    table.cell(stats_table, 2, 0, "Sell", text_color=color.white, text_size=size.normal, bgcolor=color.red)
     
     // Total Count (Total bars in chart)
-    table.cell(stats_table, 0, 1, "Total Count:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 0, 1, "Total Bars:", text_color=color.black, text_size=size.small)
     table.cell(stats_table, 1, 1, str.tostring(total_bars), text_color=color.black, text_size=size.small)
     table.cell(stats_table, 2, 1, str.tostring(total_bars), text_color=color.black, text_size=size.small)
     
     // Trade Count (with percentage of total bars)
-    table.cell(stats_table, 0, 2, "Trade Count:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 2, str.tostring(total_btd_trades) + " (" + str.tostring(btd_trade_rate, "#.##") + "%)", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 2, 2, str.tostring(total_str_trades) + " (" + str.tostring(str_trade_rate, "#.##") + "%)", text_color=color.black, text_size=size.small)
-    
-    // Pending Trades
-    table.cell(stats_table, 0, 3, "Pending:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 3, str.tostring(pending_btd_trades), text_color=color.gray, text_size=size.small)
-    table.cell(stats_table, 2, 3, str.tostring(pending_str_trades), text_color=color.gray, text_size=size.small)
+    table.cell(stats_table, 0, 2, "Signals:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 2, str.tostring(total_buy_trades) + " (" + str.tostring(buy_trade_rate, "#.##") + "%)", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 2, 2, str.tostring(total_sell_trades) + " (" + str.tostring(sell_trade_rate, "#.##") + "%)", text_color=color.black, text_size=size.small)
     
     // Profit (with percentage of completed trades)
-    table.cell(stats_table, 0, 4, "Profit:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 4, str.tostring(btd_wins) + " (" + str.tostring(btd_win_rate, "#.##") + "%)", text_color=color.green, text_size=size.small)
-    table.cell(stats_table, 2, 4, str.tostring(str_wins) + " (" + str.tostring(str_win_rate, "#.##") + "%)", text_color=color.green, text_size=size.small)
+    table.cell(stats_table, 0, 3, "Profit:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 3, str.tostring(buy_wins) + " (" + str.tostring(buy_win_rate, "#.##") + "%)", text_color=color.green, text_size=size.small)
+    table.cell(stats_table, 2, 3, str.tostring(sell_wins) + " (" + str.tostring(sell_win_rate, "#.##") + "%)", text_color=color.green, text_size=size.small)
     
     // Loss (with percentage of completed trades)
-    table.cell(stats_table, 0, 5, "Loss:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 5, str.tostring(btd_losses) + " (" + str.tostring(btd_loss_rate, "#.##") + "%)", text_color=color.red, text_size=size.small)
-    table.cell(stats_table, 2, 5, str.tostring(str_losses) + " (" + str.tostring(str_loss_rate, "#.##") + "%)", text_color=color.red, text_size=size.small)
-    
-    // Completed Trades (for reference)
-    table.cell(stats_table, 0, 6, "Completed:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 6, str.tostring(completed_btd_trades), text_color=color.blue, text_size=size.small)
-    table.cell(stats_table, 2, 6, str.tostring(completed_str_trades), text_color=color.blue, text_size=size.small)
+    table.cell(stats_table, 0, 4, "Loss:", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 1, 4, str.tostring(buy_losses) + " (" + str.tostring(buy_loss_rate, "#.##") + "%)", text_color=color.red, text_size=size.small)
+    table.cell(stats_table, 2, 4, str.tostring(sell_losses) + " (" + str.tostring(sell_loss_rate, "#.##") + "%)", text_color=color.red, text_size=size.small)
 
-// Style line perameters
-hline(0, "Zero Line", color=#FFFFFF, linewidth=1)
-plot(buy1, title="Buy1", color=color.new(#00FF00, 60), linewidth=1)
-plot(buy2, title="Buy2", color=color.new(#00FF00, 50), linewidth=1)
-plot(buy3, title="Buy3", color=color.new(#00FF00, 40), linewidth=1)
-plot(sell1, title="Sell1", color=color.new(#FF0000, 60), linewidth=1)
-plot(sell2, title="Sell2", color=color.new(#FF0000, 50), linewidth=1)
-plot(sell3, title="Sell3", color=color.new(#FF0000, 40), linewidth=1)
+// =============================================================================
+// VISUAL DISPLAY & STYLING
+// =============================================================================
 
-// Style background coloring
+// Zero reference line
+hline(0, "Zero Line", color=color.white, linewidth=1)
+
+// VixFix Buy signal plots - Green shades
+plot(buy1, title="Buy Short (22d)", color=color.new(color.green, 60), linewidth=1)
+plot(buy2, title="Buy Medium (66d)", color=color.new(color.green, 50), linewidth=1)
+plot(buy3, title="Buy Long (132d)", color=color.new(color.green, 40), linewidth=1)
+
+// Inverse VixFix Sell signal plots - Red shades
+plot(sell1, title="Sell Short (22d)", color=color.new(color.red, 60), linewidth=1)
+plot(sell2, title="Sell Medium (66d)", color=color.new(color.red, 50), linewidth=1)
+plot(sell3, title="Sell Long (132d)", color=color.new(color.red, 40), linewidth=1)
+
+// Background intensity coloring based on signal strength
 buy_count = (buy1 < 0 ? 1 : 0) + (buy2 < 0 ? 1 : 0) + (buy3 < 0 ? 1 : 0)
 sell_count = (sell1 > 0 ? 1 : 0) + (sell2 > 0 ? 1 : 0) + (sell3 > 0 ? 1 : 0)
 
-bgcolor(  buy_count == 1 ? color.new(#00FF00, 60) :  buy_count == 2 ? color.new(#00FF00, 50) :  buy_count == 3 ? color.new(#00FF00, 40) :  sell_count == 1 ? color.new(#FF0000, 60) :  sell_count == 2 ? color.new(#FF0000, 50) :  sell_count == 3 ? color.new(#FF0000, 40) :  na,  title="Buy/Sell Intensity Background")
+// Dynamic background color based on signal intensity
+bg_color = buy_count == 1 ? color.new(color.green, 85) : 
+           buy_count == 2 ? color.new(color.green, 75) : 
+           buy_count == 3 ? color.new(color.green, 65) : 
+           sell_count == 1 ? color.new(color.red, 85) : 
+           sell_count == 2 ? color.new(color.red, 75) : 
+           sell_count == 3 ? color.new(color.red, 65) : na
+
+bgcolor(bg_color, title="Signal Intensity Background")
