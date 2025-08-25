@@ -1,3 +1,6 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// Source https://github.com/joveteo/trading-view-scripts/tree/main/Opening%20Range%20Breakout
+// © iLanat8
 //@version=6
 indicator("Intraday Opening Range Breakout", shorttitle = "ORB", overlay = true, max_lines_count = 500, max_labels_count = 500, max_boxes_count = 500)
 
@@ -8,63 +11,72 @@ indicator("Intraday Opening Range Breakout", shorttitle = "ORB", overlay = true,
 // Historical Display
 showHist = input.bool(true, title = "Show Historical Data", group = "Historical Display", tooltip = "When enabled, displays all historical opening range data from previous sessions. Disable to only show current session data.")
 
-// Opening Range Configuration
-orTF = input.timeframe("60", title = "Opening Range Period", group = "Opening Range", tooltip = "Duration for calculating the opening range. Default: 60 minutes (1 hour). This period determines how long after market open to establish the high/low range.")
+// Opening Range Period
+orTF = input.timeframe("60", title = "Opening Range Period", group = "Opening Range Period", tooltip = "Duration for calculating the opening range. Default: 60 minutes (1 hour). This period determines how long after market open to establish the high/low range.")
+crTog = input.bool(false, title = "Use Custom Range", inline = "Custom", group = "Opening Range Period", tooltip = "Enable to override the default opening range with a custom time session.")
+crSesh = input.session("0930-1030", title = "Custom Session", inline = "Custom", group = "Opening Range Period", tooltip = "Define custom trading session (format: HHMM-HHMM). Example: 0930-1030 for 9:30 AM to 10:30 AM.")
+tz = input.string("UTC-5", title = "Timezone", group = "Opening Range Period", inline = "Custom", options = ["UTC-10", "UTC-8", "UTC-7", "UTC-6", "UTC-5", "UTC-4", "UTC-3", "UTC+0", "UTC+1", "UTC+2", "UTC+3", "UTC+3:30", "UTC+4", "UTC+5", "UTC+5:30", "UTC+5:45", "UTC+6", "UTC+6:30", "UTC+7", "UTC+8", "UTC+9", "UTC+9:30", "UTC+10", "UTC+11", "UTC+12", "UTC+12:45", "UTC+13"], tooltip = "Timezone for the custom session. UTC-5 is Eastern Time, UTC-8 is Pacific Time.")
+mktSesh = input.session("0930-1600", title = "Market Hours", group = "Opening Range Period", tooltip = "Defines the regular trading hours during which today's OR High/Low are displayed in the table.")
+widthErrorColor = input.color(color.yellow, title = "Width Error Color", group = "Opening Range Period", inline = "Colors1", tooltip = "Width Error (Yellow): When the opening range is too narrow (less than 0.2% of opening price), indicating insufficient volatility for reliable breakout trading. These days are excluded from profit/loss statistics.")
+profitColor = input.color(color.green, title = "Profit Color", group = "Opening Range Period", inline = "Colors1", tooltip = "Profit (Green): Successful breakout days where price breaks out of the opening range and closes in the profitable direction relative to the breakout level.")
+lossColor = input.color(color.red, title = "Loss Color", group = "Opening Range Period", inline = "Colors2", tooltip = "Loss (Red): Failed breakout days where price breaks out of the opening range but closes in the unprofitable direction. For example: breaks above OR high but closes below OR low, or breaks below OR low but closes above OR high.")
+errorColor = input.color(color.blue, title = "Error Color", group = "Opening Range Period", inline = "Colors2", tooltip = "Error (Blue): No breakout occurred during the trading session. Price remained within the opening range throughout the entire day.")
 
-// Custom Range Settings
-crTog = input.bool(false, title = "Use Custom Range", inline = "Custom", group = "Custom Range", tooltip = "Enable to override the default opening range with a custom time session.")
-crSesh = input.session("0930-1030", title = "Custom Session", inline = "Custom", group = "Custom Range", tooltip = "Define custom trading session (format: HHMM-HHMM). Example: 0930-1030 for 9:30 AM to 10:30 AM.")
-tz = input.string("UTC-5", title = "Timezone", group = "Custom Range", inline = "Custom", options = ["UTC-10", "UTC-8", "UTC-7", "UTC-6", "UTC-5", "UTC-4", "UTC-3", "UTC+0", "UTC+1", "UTC+2", "UTC+3", "UTC+3:30", "UTC+4", "UTC+5", "UTC+5:30", "UTC+5:45", "UTC+6", "UTC+6:30", "UTC+7", "UTC+8", "UTC+9", "UTC+9:30", "UTC+10", "UTC+11", "UTC+12", "UTC+12:45", "UTC+13"], tooltip = "Timezone for the custom session. UTC-5 is Eastern Time, UTC-8 is Pacific Time.")
-
-// Breakout Signal Configuration
-sigTog = input.bool(true, title = "Show Breakout Signals", group = "Breakout Signals", tooltip = "Display triangular signals when price breaks above/below the opening range levels.")
-useBias = input.string("No Bias", title = "Signal Bias", options = ["No Bias", "Daily Bias"], group = "Breakout Signals", tooltip = "No Bias: Signals fire immediately on breakout.\nDaily Bias: Considers opening range color (bullish/bearish) - signals may be delayed until first target in opposite direction.") == "No Bias" ? false : true
-sigSize = str.lower(input.string("Normal", title = "Signal Size", options = ["Tiny", "Small", "Normal", "Large", "Huge"], group = "Breakout Signals", tooltip = "Size of the breakout signal triangles displayed on the chart."))
-upSigColor = input.color(#089981, title = "Bullish Signal Color", group = "Breakout Signals", inline = "SigColors", tooltip = "Color for upward breakout signals.")
-downSigColor = input.color(#f23645, title = "Bearish Signal Color", group = "Breakout Signals", inline = "SigColors", tooltip = "Color for downward breakout signals.")
+// Breakout Signals & Style
+sigTog = input.bool(true, title = "Show Breakout Signals", group = "Breakout Signals & Style", tooltip = "Display triangular signals when price breaks above/below the opening range levels.")
+useBias = input.string("No Bias", title = "Signal Bias", options = ["No Bias", "Daily Bias"], group = "Breakout Signals & Style", tooltip = "No Bias: Signals fire immediately on breakout.\nDaily Bias: Considers opening range color (bullish/bearish) - signals may be delayed until first target in opposite direction.") == "No Bias" ? false : true
+sigSize = str.lower(input.string("Normal", title = "Signal Size", options = ["Tiny", "Small", "Normal", "Large", "Huge"], group = "Breakout Signals & Style", tooltip = "Size of the breakout signal triangles displayed on the chart."))
+upSigColor = input.color(#089981, title = "Bullish Signal Color", group = "Breakout Signals & Style", inline = "SigColors", tooltip = "Color for upward breakout signals.")
+downSigColor = input.color(#f23645, title = "Bearish Signal Color", group = "Breakout Signals & Style", inline = "SigColors", tooltip = "Color for downward breakout signals.")
+green = input.color(color.new(#089981, 60), title = "Bullish Target Color", group = "Breakout Signals & Style", inline = "StyleColors1", tooltip = "Green color for upward target lines and labels.")
+red = input.color(color.new(#f23645, 60), title = "Bearish Target Color", group = "Breakout Signals & Style", inline = "StyleColors1", tooltip = "Red color for downward target lines and labels.")
+orColor = input.color(#787b86, title = "OR Levels Color", group = "Breakout Signals & Style", inline = "StyleColors2", tooltip = "Color for opening range high/low lines and middle line.")
+orFillColor = input.color(color.new(color.gray, 60), title = "OR Highlight Color", group = "Breakout Signals & Style", inline = "StyleColors2", tooltip = "Background highlight color for the opening range box.")
+tStyle = input.string("___", title = "Target Line Style", group = "Breakout Signals & Style", options = ["___", "- - -", ". . ."], tooltip = "Visual style for target lines:\n___ = Solid\n- - - = Dashed\n. . . = Dotted")
+txtSize = str.lower(input.string("Small", title = "Text Size", group = "Breakout Signals & Style", options = ["Tiny", "Small", "Normal", "Large", "Huge"], tooltip = "Size of labels and text displayed on targets and OR levels."))
 
 // Target Configuration
 tTog = input.bool(true, title = "Show Targets", group = "Targets", tooltip = "Display target levels based on opening range width.")
-tPer = input.float(50.0, minval = 1.0, maxval = 200.0, step = 5.0, title = "Target % of Range", group = "Targets", tooltip = "Percentage of opening range width used to calculate target distances. 50% means targets are placed at 50% intervals of the OR width.") * 0.01
+tPer = input.float(25.0, minval = 1.0, maxval = 200.0, step = 5.0, title = "Target % of Range", group = "Targets", tooltip = "Percentage of opening range width used to calculate target distances. 25% means targets are placed at 25% intervals of the OR width.") * 0.01
 tSrc = input.string("Close", title = "Target Trigger Source", options = ["Close", "Highs/Lows"], group = "Targets", tooltip = "Price source for target hits:\nClose: Uses closing price\nHighs/Lows: Uses actual high/low wicks")
 tDispType = input.string("Adaptive", title = "Target Display Mode", options = ["Adaptive", "Extended"], group = "Targets", tooltip = "Adaptive: Shows/hides targets based on current price proximity\nExtended: All targets remain visible and extend to current bar")
 
 // Session Trend Indicators
 showSMA = input.bool(false, title = "Simple Moving Average", group = "Session Trend Indicators", inline = "SMA", tooltip = "Display session-based Simple Moving Average calculated from session start.")
 smaLen = input.int(20, title = "Length", minval = 1, maxval = 200, group = "Session Trend Indicators", inline = "SMA")
-smaColor = input.color(color.blue, title = "Color", group = "Session Trend Indicators", inline = "SMA")
+smaColor = input.color(color.new(color.blue, 50), title = "Color", group = "Session Trend Indicators", inline = "SMA")
 
 showEMA = input.bool(false, title = "Exponential Moving Average", group = "Session Trend Indicators", inline = "EMA", tooltip = "Display session-based Exponential Moving Average with more weight on recent prices.")
 emaLen = input.int(20, title = "Length", minval = 1, maxval = 200, group = "Session Trend Indicators", inline = "EMA")
-emaColor = input.color(color.orange, title = "Color", group = "Session Trend Indicators", inline = "EMA")
+emaColor = input.color(color.new(color.orange, 50), title = "Color", group = "Session Trend Indicators", inline = "EMA")
 
 showRMA = input.bool(false, title = "Relative Moving Average", group = "Session Trend Indicators", inline = "RMA", tooltip = "Display session-based Relative Moving Average (Wilder's smoothing).")
 rmaLen = input.int(20, title = "Length", minval = 1, maxval = 200, group = "Session Trend Indicators", inline = "RMA")
-rmaColor = input.color(color.purple, title = "Color", group = "Session Trend Indicators", inline = "RMA")
+rmaColor = input.color(color.new(color.purple, 50), title = "Color", group = "Session Trend Indicators", inline = "RMA")
 
 showWMA = input.bool(false, title = "Weighted Moving Average", group = "Session Trend Indicators", inline = "WMA", tooltip = "Display session-based Weighted Moving Average with linear weighting.")
 wmaLen = input.int(20, title = "Length", minval = 1, maxval = 200, group = "Session Trend Indicators", inline = "WMA")
-wmaColor = input.color(color.yellow, title = "Color", group = "Session Trend Indicators", inline = "WMA")
+wmaColor = input.color(color.new(color.yellow, 50), title = "Color", group = "Session Trend Indicators", inline = "WMA")
 
-showVWAP = input.bool(false, title = "Anchor VWAP", group = "Session Trend Indicators", inline = "VWAP", tooltip = "Display session-based Anchor VWAP anchored to daily opening price.")
-vwapColor = input.color(color.red, title = "Color", group = "Session Trend Indicators", inline = "VWAP")
+showVWAP = input.bool(true, title = "Anchor VWAP", group = "Session Trend Indicators", inline = "VWAP", tooltip = "Display session-based Anchor VWAP anchored to daily opening price.")
+vwapColor = input.color(color.new(color.red, 50), title = "Color", group = "Session Trend Indicators", inline = "VWAP")
+
+
 
 // Table Configuration
 showTable = input.bool(true, title = "Show Statistics Table", group = "Table", tooltip = "Display/hide the statistics table. Disable for cleaner chart view or mobile usage.")
+tableLocation = input.string("Top Right", title = "Table Location", options = ["Top Right", "Bottom Right", "Bottom Left"], group = "Table", tooltip = "Choose where to place the statistics table.")
+tableTextSize = input.string("Small", title = "Table Text Size", options = ["Auto", "Huge", "Large", "Normal", "Small", "Tiny"], group = "Table", tooltip = "Set the table text size. Default Small.")
 
-// Session Status Colors
-widthErrorColor = input.color(color.yellow, title = "Width Error Color", group = "Session Colors", inline = "Status1", tooltip = "Color for width error days (opening range < 0.2% of opening price)")
-profitColor = input.color(color.green, title = "Profit Color", group = "Session Colors", inline = "Status1", tooltip = "Color for profitable breakout days")
-lossColor = input.color(color.red, title = "Loss Color", group = "Session Colors", inline = "Status2", tooltip = "Color for loss breakout days")
-errorColor = input.color(color.blue, title = "Error Color", group = "Session Colors", inline = "Status2", tooltip = "Color for error days (no breakout occurred)")
+// Table Column Visibility
+showDaysColumn = input.bool(true, title = "Show Days", group = "Table Columns", inline = "Col1", tooltip = "Display the total number of trading days analyzed.")
+showWidthErrorColumn = input.bool(true, title = "Show Width Error", group = "Table Columns", inline = "Col1", tooltip = "Display width error days (when opening range is too narrow for reliable trading).")
+showProfitColumn = input.bool(true, title = "Show Profit", group = "Table Columns", inline = "Col2", tooltip = "Display profitable breakout days.")
+showLossColumn = input.bool(true, title = "Show Loss", group = "Table Columns", inline = "Col2", tooltip = "Display losing breakout days.")
+showErrorColumn = input.bool(true, title = "Show Error", group = "Table Columns", inline = "Col3", tooltip = "Display error days (no breakout occurred).")
+showORHORL = input.bool(true, title = "Show ORH/ORL", group = "Table Columns", inline = "Col3", tooltip = "Display today's Opening Range High and Low during market hours.")
 
-// Style Configuration
-green = input.color(color.new(#089981, 60), title = "Bullish Target Color", group = "Style", inline = "Bull", tooltip = "Color for upward target lines and labels.")
-red = input.color(color.new(#f23645, 60), title = "Bearish Target Color", group = "Style", inline = "Bear", tooltip = "Color for downward target lines and labels.")
-orColor = input.color(#787b86, title = "OR Levels Color", group = "Style", inline = "Range", tooltip = "Color for opening range high/low lines and middle line.")
-orFillColor = input.color(color.new(color.gray, 60), title = "OR Highlight Color", group = "Style", inline = "Range", tooltip = "Background highlight color for the opening range box.")
-tStyle = input.string("___", title = "Target Line Style", options = ["___", "- - -", ". . ."], group = "Style", tooltip = "Visual style for target lines:\n___ = Solid\n- - - = Dashed\n. . . = Dotted")
-txtSize = str.lower(input.string("Small", title = "Text Size", options = ["Tiny", "Small", "Normal", "Large", "Huge"], group = "Style", tooltip = "Size of labels and text displayed on targets and OR levels."))
+
 
 // Constants
 color invis = color.rgb(0, 0, 0, 100)
@@ -107,6 +119,8 @@ day_ma(_start, _type, source, length) =>
         ma := ta.wma(source, valid_length)
     ma
 
+
+
 // Session-based Anchor VWAP calculation anchored to daily open
 session_anchor_vwap(_start) =>
     var float anchor_price = na
@@ -120,14 +134,12 @@ session_anchor_vwap(_start) =>
     
     float vwap_val = na
     if not na(anchor_price)
-        current_pv = close * volume
-    sum_pv += current_pv
-    sum_v += volume
-    
+        float current_pv = close * volume
+        sum_pv += current_pv
+        sum_v += volume
         vwap_val := sum_v > 0 ? sum_pv / sum_v : anchor_price
     else
         vwap_val := close
-        
     vwap_val
 
 // Dash pattern for adaptive display
@@ -179,6 +191,8 @@ var box or_bx = na
 var target h_ln = target.new(na, na)
 var target l_ln = target.new(na, na)
 var linefill or_status_fill = na
+
+
 
 // Bias and signal tracking
 var int day_dir = 0
@@ -239,6 +253,9 @@ else
 bool or_start = or_sesh and not or_sesh[1]
 bool or_end = or_sesh[1] and not or_sesh
 
+// Are we currently inside regular market hours?
+bool in_market_hours = not na(time(timeframe.period, mktSesh, tz))
+
 // =============================================================================
 // SESSION START PROCESSING
 // =============================================================================
@@ -264,8 +281,6 @@ if or_start
                 
                 if or_range < width_threshold
                     width_error_days += 1
-                    if not na(prev_orh)
-                        label.new(bar_index - 1, prev_orh + (prev_orh - prev_orl) * 0.1, "W", style=label.style_label_down, color=widthErrorColor, textcolor=color.white, size=size.tiny, tooltip="Width Error: Opening range < 0.2%")
                 else
                     // Analyze breakout outcomes using same logic as current session
                     if prev_broke_high or prev_broke_low
@@ -285,17 +300,11 @@ if or_start
                         
                         if prev_is_profit
                             profit_days += 1
-                            if not na(prev_orh)
-                                label.new(bar_index - 1, prev_orh + (prev_orh - prev_orl) * 0.1, "P", style=label.style_label_down, color=profitColor, textcolor=color.white, size=size.tiny, tooltip="Profit Day: Successful breakout")
                         else
                             loss_days += 1
-                            if not na(prev_orh)
-                                label.new(bar_index - 1, prev_orh + (prev_orh - prev_orl) * 0.1, "L", style=label.style_label_down, color=lossColor, textcolor=color.white, size=size.tiny, tooltip="Loss Day: Failed breakout")
                     else
                         // No breakout occurred
                         error_days += 1
-                        if not na(prev_orh)
-                            label.new(bar_index - 1, prev_orh + (prev_orh - prev_orl) * 0.1, "E", style=label.style_label_down, color=errorColor, textcolor=color.white, size=size.tiny, tooltip="Error Day: No breakout")
     
     // Clean up previous session visuals
     for targ in up_targs
@@ -390,7 +399,6 @@ if or_end and or_token
         is_tradable_day := or_range >= width_threshold
         
         if not is_tradable_day and not width_error_shown
-            day_outcome_label := label.new(bar_index, orh + (orh - orl) * 0.1, "W", style=label.style_label_down, color=widthErrorColor, textcolor=color.white, size=size.tiny, tooltip="Width Error: Opening range < 0.2%")
             width_error_shown := true
             current_session_status := "Width Error"
 
@@ -436,10 +444,7 @@ if barstate.islast and or_token and not session_processed
         if or_range < width_threshold
             width_error_days += 1
             current_session_status := "Width Error"
-            if na(day_outcome_label)
-                day_outcome_label := label.new(bar_index, orh + (orh - orl) * 0.1, "W", 
-                                              style=label.style_label_down, color=widthErrorColor, textcolor=color.white, 
-                                              size=size.tiny, tooltip="Width Error: Opening range < 0.2%")
+
         else
             if daily_broke_high or daily_broke_low
                 // Use same logic as background fill - prioritize first breakout when both occur
@@ -463,24 +468,14 @@ if barstate.islast and or_token and not session_processed
                 if is_profit
                     profit_days += 1
                     current_session_status := "Profit Day"
-                    if na(day_outcome_label)
-                        day_outcome_label := label.new(bar_index, orh + (orh - orl) * 0.1, "P", 
-                                                      style=label.style_label_down, color=profitColor, textcolor=color.white, 
-                                                      size=size.tiny, tooltip="Profit Day: Successful breakout")
                 else
                     loss_days += 1
                     current_session_status := "Loss Day"
-                    if na(day_outcome_label)
-                        day_outcome_label := label.new(bar_index, orh + (orh - orl) * 0.1, "L", 
-                                                      style=label.style_label_down, color=lossColor, textcolor=color.white, 
-                                                      size=size.tiny, tooltip="Loss Day: Failed breakout")
             else
                 error_days += 1
                 current_session_status := "Error Day"
-                if na(day_outcome_label)
-                    day_outcome_label := label.new(bar_index, orh + (orh - orl) * 0.1, "E", 
-                                                  style=label.style_label_down, color=errorColor, textcolor=color.white, 
-                                                  size=size.tiny, tooltip="Error Day: No breakout")
+
+
 
 // =============================================================================
 // LEVEL EXTENSIONS
@@ -593,7 +588,7 @@ float session_anchor_vwap_val = showVWAP ? session_anchor_vwap(or_start) : na
 // DISPLAY & VISUALIZATION
 // =============================================================================
 
-// Statistics Table
+// Statistics Table (configurable location/size, horizontal layout)
 if barstate.islast and showTable
     if not na(stats_table)
         table.delete(stats_table)
@@ -606,27 +601,79 @@ if barstate.islast and showTable
     
     bool is_current_session = or_token and not session_processed
     
-    // Create statistics table
-    stats_table := table.new(position.top_right, 2, 6, bgcolor=color.white, border_width=1, frame_width=1, frame_color=color.gray)
+    // Location mapping
+    var table_pos = position.top_right
+    if tableLocation == "Bottom Right"
+        table_pos := position.bottom_right
+    else if tableLocation == "Bottom Left"
+        table_pos := position.bottom_left
+
+    // Size input and mapping
+    string tSize = tableTextSize
+    var string mappedSize = size.small
+    mappedSize := tSize == "Auto" ? size.auto : mappedSize
+    mappedSize := tSize == "Huge" ? size.huge : mappedSize
+    mappedSize := tSize == "Large" ? size.large : mappedSize
+    mappedSize := tSize == "Normal" ? size.normal : mappedSize
+    mappedSize := tSize == "Small" ? size.small : mappedSize
+    mappedSize := tSize == "Tiny" ? size.tiny : mappedSize
+
+    // Calculate dynamic column count based on user preferences
+    int num_cols = 0
+    if showDaysColumn
+        num_cols += 1
+    if showWidthErrorColumn
+        num_cols += 1
+    if showProfitColumn
+        num_cols += 1
+    if showLossColumn
+        num_cols += 1
+    if showErrorColumn
+        num_cols += 1
+    if showORHORL and in_market_hours and not na(orh) and not na(orl)
+        num_cols += 2  // ORH and ORL are separate columns
     
-    // Table headers and data
-    table.cell(stats_table, 0, 0, "ORB Statistics", text_color=color.black, text_size=size.normal, bgcolor=color.gray)
-    table.cell(stats_table, 1, 0, "", text_color=color.black, text_size=size.normal, bgcolor=color.gray)
-    
-    table.cell(stats_table, 0, 1, "Days Counted:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 1, str.tostring(days_counted + (is_current_session ? 1 : 0)), text_color=color.black, text_size=size.small)
-    
-    table.cell(stats_table, 0, 2, "Width Error:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 2, str.tostring(width_error_days) + " (" + str.tostring(width_error_rate, "#.##") + "%)", text_color=widthErrorColor, text_size=size.small)
-    
-    table.cell(stats_table, 0, 3, "Profit Days:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 3, str.tostring(profit_days) + " (" + str.tostring(profit_rate, "#.##") + "%)", text_color=profitColor, text_size=size.small)
-    
-    table.cell(stats_table, 0, 4, "Loss Days:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 4, str.tostring(loss_days) + " (" + str.tostring(loss_rate, "#.##") + "%)", text_color=lossColor, text_size=size.small)
-    
-    table.cell(stats_table, 0, 5, "Error Days:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 5, str.tostring(error_days) + " (" + str.tostring(error_rate, "#.##") + "%)", text_color=errorColor, text_size=size.small)
+    // Only create table if at least one column is enabled
+    if num_cols > 0
+        // Create statistics table (2 rows: titles and values)
+        stats_table := table.new(table_pos, num_cols, 2, bgcolor=color.rgb(30,34,45), border_width=1, frame_width=1, frame_color=color.rgb(55,58,70), border_color=color.rgb(55,58,70))
+        
+        // Dynamic column index counter
+        int col_idx = 0
+        
+        // Add columns based on user preferences
+        if showDaysColumn
+            table.cell(stats_table, col_idx, 0, "Days", text_color=color.white, text_size=mappedSize, bgcolor=color.rgb(30,34,45))
+            table.cell(stats_table, col_idx, 1, str.tostring(days_counted + (is_current_session ? 1 : 0)), text_color=color.white, text_size=mappedSize, bgcolor=color.rgb(30,34,45))
+            col_idx += 1
+        
+        if showWidthErrorColumn
+            table.cell(stats_table, col_idx, 0, "Width Err", text_color=color.white, text_size=mappedSize, bgcolor=color.rgb(30,34,45))
+            table.cell(stats_table, col_idx, 1, str.tostring(width_error_days) + " (" + str.tostring(width_error_rate, "#.##") + "%)", text_color=color.white, text_size=mappedSize, bgcolor=color.rgb(30,34,45))
+            col_idx += 1
+        
+        if showProfitColumn
+            table.cell(stats_table, col_idx, 0, "Profit", text_color=color.white, text_size=mappedSize, bgcolor=color.rgb(30,34,45))
+            table.cell(stats_table, col_idx, 1, str.tostring(profit_days) + " (" + str.tostring(profit_rate, "#.##") + "%)", text_color=color.white, text_size=mappedSize, bgcolor=color.rgb(30,34,45))
+            col_idx += 1
+        
+        if showLossColumn
+            table.cell(stats_table, col_idx, 0, "Loss", text_color=color.white, text_size=mappedSize, bgcolor=color.rgb(30,34,45))
+            table.cell(stats_table, col_idx, 1, str.tostring(loss_days) + " (" + str.tostring(loss_rate, "#.##") + "%)", text_color=color.white, text_size=mappedSize, bgcolor=color.rgb(30,34,45))
+            col_idx += 1
+        
+        if showErrorColumn
+            table.cell(stats_table, col_idx, 0, "Error", text_color=color.white, text_size=mappedSize, bgcolor=color.rgb(30,34,45))
+            table.cell(stats_table, col_idx, 1, str.tostring(error_days) + " (" + str.tostring(error_rate, "#.##") + "%)", text_color=color.white, text_size=mappedSize, bgcolor=color.rgb(30,34,45))
+            col_idx += 1
+        
+        // Add ORH/ORL during market hours if enabled
+        if showORHORL and in_market_hours and not na(orh) and not na(orl)
+            table.cell(stats_table, col_idx, 0, "ORH", text_color=color.white, text_size=mappedSize, bgcolor=color.rgb(30,34,45))
+            table.cell(stats_table, col_idx, 1, str.tostring(orh, format.mintick), text_color=color.white, text_size=mappedSize, bgcolor=color.rgb(30,34,45))
+            col_idx += 1
+            table.cell(stats_table, col_idx, 0, "ORL", text_color=color.white, text_size=mappedSize, bgcolor=color.rgb(30,34,45))
+            table.cell(stats_table, col_idx, 1, str.tostring(orl, format.mintick), text_color=color.white, text_size=mappedSize, bgcolor=color.rgb(30,34,45))
 
 // Trend Indicator Plots
 plot(or_start ? na : session_sma, "Session SMA", color=showSMA ? smaColor : na, linewidth=2)
@@ -637,9 +684,14 @@ plot(or_start ? na : session_wma, "Session WMA", color=showWMA ? wmaColor : na, 
 // Session Anchor VWAP plot
 plot(or_start ? na : session_anchor_vwap_val, "Session Anchor VWAP", color=showVWAP ? vwapColor : na, linewidth=2)
 
-// Target Generation
+// Target Generation - only show targets when price closes outside opening range
 if not or_sesh and or_token
-    if up_count < up_max and tTog
+    // Check if price has closed above OR high (show upward targets)
+    bool show_up_targets = close > orh
+    // Check if price has closed below OR low (show downward targets)  
+    bool show_down_targets = close < orl
+    
+    if up_count < up_max and tTog and show_up_targets
         for i = (up_count + 1) to up_max 
             up_targs.push(target.new(
               line.new(bar_index - 1, (orh + orw * tPer * i), bar_index, (orh + (orw * tPer * i)), 
@@ -651,7 +703,7 @@ if not or_sesh and or_token
             if i == up_max
                 up_count := up_max
                 
-    if down_count < down_max and tTog
+    if down_count < down_max and tTog and show_down_targets
         for i = (down_count + 1) to down_max
             down_targs.push(target.new(
               line.new(bar_index - 1, (orl - orw * tPer * i), bar_index, (orl - (orw * tPer * i)), 
