@@ -1,0 +1,20 @@
+//@version=6
+indicator("Custom VIX - 1D VIX Highlight", "VIX 1D Highlight", overlay = false)
+
+// Inputs
+string vixSymbol = input.symbol("CBOE:VIX", "VIX Symbol")
+int threshold = input.int(30, "VIX Threshold", minval = 0)
+int shadeOpacity = input.int(80, "Shade Opacity (0-100)", minval = 0, maxval = 100)
+
+// Request 1D VIX close
+float vixDaily = request.security(vixSymbol, "D", close, barmerge.gaps_off, barmerge.lookahead_off)
+
+// Plot VIX 1D series in this pane
+plot(vixDaily, title = "VIX 1D Close", color = color.new(color.yellow, 0))
+hline(threshold, "Threshold", color = color.new(color.teal, 0))
+
+// Highlight this pane when VIX > threshold
+bool isAbove = vixDaily > threshold
+bgcolor(isAbove ? color.new(color.teal, shadeOpacity) : na, title = "Above-threshold highlight")
+
+
