@@ -15,23 +15,53 @@ length1 = input.int(title="Length 1", defval=22, minval=1, maxval=500, tooltip="
 length2 = input.int(title="Length 2", defval=66, minval=1, maxval=500, tooltip="Average number of trading days in 3 months. Controls medium-term volatility calculation.")
 length3 = input.int(title="Length 3", defval=132, minval=1, maxval=500, tooltip="Average number of trading days in 6 months. Controls long-term volatility calculation.")
 
-// Statistics Configuration
-showTable = input.bool(title="Show Statistics Table", defval=true, group="Statistics", tooltip="Display/hide the statistics table. Disable for mobile or cleaner chart view.")
-tradeDuration = input.int(title="Trade Duration (Days)", defval=30, minval=5, maxval=250, group="Statistics", tooltip="Number of trading days to wait before evaluating trade success. Default: 30 days (was 90 in original).")
+// Signal Configuration
+enableBuySignals = input.bool(title="Enable Buy Signals", defval=true, group="Signals", tooltip="Toggle generation, plotting, and tracking of buy-side VixFix signals.")
+enableSellSignals = input.bool(title="Enable Sell Signals", defval=false, group="Signals", tooltip="Toggle generation, plotting, and tracking of sell-side VixFix signals.")
+enableVIX = input.bool(title="Enable VIX Signal", defval=true, group="Signals", tooltip="Display CBOE VIX data offset by +100. Highlights when VIX > threshold (displayed as threshold + 100).")
+buyThreshold = input.float(title="Buy Signal Threshold", defval=0.0, minval=-1000.0, maxval=1000.0, step=0.1, group="Signals", tooltip="Reference level used for buy signal crossovers. Buy signals trigger when values cross below this threshold.")
+sellThreshold = input.float(title="Sell Signal Threshold", defval=0.0, minval=-1000.0, maxval=1000.0, step=0.1, group="Signals", tooltip="Reference level used for sell signal crossovers. Sell signals trigger when values cross above this threshold.")
+vixThreshold = input.float(title="VIX Signal Threshold", defval=30.0, minval=0.0, maxval=100.0, step=0.1, group="Signals", tooltip="VIX threshold for highlighting. When VIX exceeds this value (displayed as threshold + 100), the area above 100 is highlighted.")
+vixOffset = input.float(title="VIX Offset", defval=100.0, minval=0.0, maxval=500.0, step=1.0, group="Signals", tooltip="Offset applied to VIX values for display. VIX will be plotted starting from this value.")
+
+// Backtest Configuration
+showTable = input.bool(title="Show Backtest Table", defval=false, group="Backtest", tooltip="Display/hide the backtest statistics table. Disable for mobile or cleaner chart view.")
+tradeDuration = input.int(title="Trade Duration (Days)", defval=30, minval=5, maxval=250, group="Backtest", tooltip="Number of trading days to wait before evaluating trade success. Default: 30 days (was 90 in original).")
 
 // =============================================================================
 // CORE CALCULATIONS
 // =============================================================================
 
+// Percentage distance from a reference price, guarded against divide-by-zero
+calcDeviation(srcPrice, anchorPrice) =>
+    anchorPrice != 0 ? ((srcPrice - anchorPrice) / anchorPrice) * 100 : na
+
 // VixFix calculations for Buy signals
-buy1 = ((high - ta.lowest(close[1], length1)) / ta.lowest(close[1], length1)) * 100
-buy2 = ((high - ta.lowest(close[1], length2)) / ta.lowest(close[1], length2)) * 100
-buy3 = ((high - ta.lowest(close[1], length3)) / ta.lowest(close[1], length3)) * 100
+lowest_close_len1 = ta.lowest(close[1], length1)
+lowest_close_len2 = ta.lowest(close[1], length2)
+lowest_close_len3 = ta.lowest(close[1], length3)
+
+buy1 = calcDeviation(high, lowest_close_len1)
+buy2 = calcDeviation(high, lowest_close_len2)
+buy3 = calcDeviation(high, lowest_close_len3)
 
 // Inverse VixFix calculations for Sell signals
-sell1 = ((low - ta.highest(close[1], length1)) / ta.highest(close[1], length1)) * 100
-sell2 = ((low - ta.highest(close[1], length2)) / ta.highest(close[1], length2)) * 100
-sell3 = ((low - ta.highest(close[1], length3)) / ta.highest(close[1], length3)) * 100
+highest_close_len1 = ta.highest(close[1], length1)
+highest_close_len2 = ta.highest(close[1], length2)
+highest_close_len3 = ta.highest(close[1], length3)
+
+sell1 = calcDeviation(low, highest_close_len1)
+sell2 = calcDeviation(low, highest_close_len2)
+sell3 = calcDeviation(low, highest_close_len3)
+
+// =============================================================================
+// VIX DATA RETRIEVAL
+// =============================================================================
+
+// Fetch CBOE VIX data using the current chart's timeframe
+vix_raw = enableVIX ? request.security("CBOE:VIX", timeframe.period, close, barmerge.gaps_off, barmerge.lookahead_off) : na
+vix_display = not na(vix_raw) ? vix_raw + vixOffset : na
+vix_crossed_threshold = not na(vix_raw) and vix_raw > vixThreshold  // VIX > threshold (displayed as > offset + threshold)
 
 // =============================================================================
 // STATISTICS TRACKING VARIABLES
@@ -39,6 +69,7 @@ sell3 = ((low - ta.highest(close[1], length3)) / ta.highest(close[1], length3)) 
 
 // Table and tracking arrays
 var table stats_table = na
+var table values_table = na
 var array<float> buy_entry_prices = array.new<float>()
 var array<int> buy_entry_bars = array.new<int>()
 var array<float> sell_entry_prices = array.new<float>()
@@ -59,13 +90,13 @@ var int sell_losses = 0
 
 // Hierarchical signal detection to prevent duplicates
 // Higher timeframes take precedence (132 > 66 > 22)
-buy_signal_132 = buy3 < 0 and buy3[1] >= 0  // New signal on 132-day timeframe
-buy_signal_66 = buy2 < 0 and buy2[1] >= 0 and not buy_signal_132  // New signal on 66-day, but not if 132 already triggered
-buy_signal_22 = buy1 < 0 and buy1[1] >= 0 and not buy_signal_132 and not buy_signal_66  // New signal on 22-day, but not if others triggered
+buy_signal_132 = enableBuySignals and buy3 < buyThreshold and buy3[1] >= buyThreshold  // New signal on 132-day timeframe
+buy_signal_66 = enableBuySignals and buy2 < buyThreshold and buy2[1] >= buyThreshold and not buy_signal_132  // New signal on 66-day, but not if 132 already triggered
+buy_signal_22 = enableBuySignals and buy1 < buyThreshold and buy1[1] >= buyThreshold and not buy_signal_132 and not buy_signal_66  // New signal on 22-day, but not if others triggered
 
-sell_signal_132 = sell3 > 0 and sell3[1] <= 0  // New signal on 132-day timeframe
-sell_signal_66 = sell2 > 0 and sell2[1] <= 0 and not sell_signal_132  // New signal on 66-day, but not if 132 already triggered
-sell_signal_22 = sell1 > 0 and sell1[1] <= 0 and not sell_signal_132 and not sell_signal_66  // New signal on 22-day, but not if others triggered
+sell_signal_132 = enableSellSignals and sell3 > sellThreshold and sell3[1] <= sellThreshold  // New signal on 132-day timeframe
+sell_signal_66 = enableSellSignals and sell2 > sellThreshold and sell2[1] <= sellThreshold and not sell_signal_132  // New signal on 66-day, but not if 132 already triggered
+sell_signal_22 = enableSellSignals and sell1 > sellThreshold and sell1[1] <= sellThreshold and not sell_signal_132 and not sell_signal_66  // New signal on 22-day, but not if others triggered
 
 // Combined signals (no duplicates)
 buy_signal = buy_signal_132 or buy_signal_66 or buy_signal_22
@@ -79,13 +110,13 @@ sell_signal = sell_signal_132 or sell_signal_66 or sell_signal_22
 total_bars += 1
 
 // Track Buy signals
-if buy_signal
+if buy_signal and enableBuySignals
     array.push(buy_entry_prices, close)
     array.push(buy_entry_bars, bar_index)
     total_buy_trades += 1
 
 // Track Sell signals
-if sell_signal
+if sell_signal and enableSellSignals
     array.push(sell_entry_prices, close)
     array.push(sell_entry_bars, bar_index)
     total_sell_trades += 1
@@ -125,7 +156,7 @@ if array.size(sell_entry_bars) > 0
             array.remove(sell_entry_prices, i)
 
 // =============================================================================
-// STATISTICS TABLE DISPLAY
+// BACKTEST TABLE DISPLAY
 // =============================================================================
 
 if barstate.islast and showTable
@@ -148,60 +179,144 @@ if barstate.islast and showTable
     sell_loss_rate = completed_sell_trades > 0 ? math.round((sell_losses / completed_sell_trades) * 100, 2) : 0.0
     
     // Create statistics table
-    stats_table := table.new(position.top_right, 3, 5, bgcolor=color.white, border_width=1, frame_width=1, frame_color=color.gray)
+    stats_table := table.new(position.top_right, 3, 5, bgcolor=color.black, border_width=1, frame_width=1, frame_color=color.black)
     
     // Headers
-    table.cell(stats_table, 0, 0, "VIX Fix Stats", text_color=color.black, text_size=size.normal, bgcolor=color.gray)
-    table.cell(stats_table, 1, 0, "Buy", text_color=color.white, text_size=size.normal, bgcolor=color.green)
-    table.cell(stats_table, 2, 0, "Sell", text_color=color.white, text_size=size.normal, bgcolor=color.red)
+    table.cell(stats_table, 0, 0, "Backtest", text_color=color.white, text_size=size.normal, bgcolor=color.black)
+    table.cell(stats_table, 1, 0, "Buy", text_color=color.white, text_size=size.normal, bgcolor=color.black)
+    table.cell(stats_table, 2, 0, "Sell", text_color=color.white, text_size=size.normal, bgcolor=color.black)
     
     // Total Count (Total bars in chart)
-    table.cell(stats_table, 0, 1, "Total Bars:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 1, str.tostring(total_bars), text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 2, 1, str.tostring(total_bars), text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 0, 1, "Total Bars:", text_color=color.white, text_size=size.small, bgcolor=color.black)
+    table.cell(stats_table, 1, 1, str.tostring(total_bars), text_color=color.white, text_size=size.small, bgcolor=color.black)
+    table.cell(stats_table, 2, 1, str.tostring(total_bars), text_color=color.white, text_size=size.small, bgcolor=color.black)
     
     // Trade Count (with percentage of total bars)
-    table.cell(stats_table, 0, 2, "Signals:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 2, str.tostring(total_buy_trades) + " (" + str.tostring(buy_trade_rate, "#.##") + "%)", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 2, 2, str.tostring(total_sell_trades) + " (" + str.tostring(sell_trade_rate, "#.##") + "%)", text_color=color.black, text_size=size.small)
+    table.cell(stats_table, 0, 2, "Signals:", text_color=color.white, text_size=size.small, bgcolor=color.black)
+    table.cell(stats_table, 1, 2, str.tostring(total_buy_trades) + " (" + str.tostring(buy_trade_rate, "#.##") + "%)", text_color=color.white, text_size=size.small, bgcolor=color.black)
+    table.cell(stats_table, 2, 2, str.tostring(total_sell_trades) + " (" + str.tostring(sell_trade_rate, "#.##") + "%)", text_color=color.white, text_size=size.small, bgcolor=color.black)
     
     // Profit (with percentage of completed trades)
-    table.cell(stats_table, 0, 3, "Profit:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 3, str.tostring(buy_wins) + " (" + str.tostring(buy_win_rate, "#.##") + "%)", text_color=color.green, text_size=size.small)
-    table.cell(stats_table, 2, 3, str.tostring(sell_wins) + " (" + str.tostring(sell_win_rate, "#.##") + "%)", text_color=color.green, text_size=size.small)
+    table.cell(stats_table, 0, 3, "Profit:", text_color=color.white, text_size=size.small, bgcolor=color.black)
+    table.cell(stats_table, 1, 3, str.tostring(buy_wins) + " (" + str.tostring(buy_win_rate, "#.##") + "%)", text_color=color.white, text_size=size.small, bgcolor=color.black)
+    table.cell(stats_table, 2, 3, str.tostring(sell_wins) + " (" + str.tostring(sell_win_rate, "#.##") + "%)", text_color=color.white, text_size=size.small, bgcolor=color.black)
     
     // Loss (with percentage of completed trades)
-    table.cell(stats_table, 0, 4, "Loss:", text_color=color.black, text_size=size.small)
-    table.cell(stats_table, 1, 4, str.tostring(buy_losses) + " (" + str.tostring(buy_loss_rate, "#.##") + "%)", text_color=color.red, text_size=size.small)
-    table.cell(stats_table, 2, 4, str.tostring(sell_losses) + " (" + str.tostring(sell_loss_rate, "#.##") + "%)", text_color=color.red, text_size=size.small)
+    table.cell(stats_table, 0, 4, "Loss:", text_color=color.white, text_size=size.small, bgcolor=color.black)
+    table.cell(stats_table, 1, 4, str.tostring(buy_losses) + " (" + str.tostring(buy_loss_rate, "#.##") + "%)", text_color=color.white, text_size=size.small, bgcolor=color.black)
+    table.cell(stats_table, 2, 4, str.tostring(sell_losses) + " (" + str.tostring(sell_loss_rate, "#.##") + "%)", text_color=color.white, text_size=size.small, bgcolor=color.black)
+
+// =============================================================================
+// VALUES TABLE DISPLAY (Metrics Table - Always Shown)
+// =============================================================================
+
+if barstate.islast
+    // Delete existing values table
+    if not na(values_table)
+        table.delete(values_table)
+    
+    // Create values table (horizontal orientation, top right)
+    // Calculate number of columns based on enabled signals
+    num_cols = 0
+    if enableVIX
+        num_cols += 1
+    if enableBuySignals
+        num_cols += 3
+    if enableSellSignals
+        num_cols += 3
+    
+    // Ensure at least 2 columns
+    num_cols := math.max(num_cols, 2)
+    
+    values_table := table.new(position.top_right, num_cols, 2, bgcolor=color.black, border_width=1, frame_width=1, frame_color=color.black)
+    
+    // Fill table horizontally - Row 0: Metric names, Row 1: Values
+    col_idx = 0
+    
+    // VIX value
+    if enableVIX
+        table.cell(values_table, col_idx, 0, "VIX", text_color=color.white, text_size=size.small, bgcolor=color.black)
+        if not na(vix_raw)
+            table.cell(values_table, col_idx, 1, str.tostring(vix_raw, "#.##"), text_color=color.white, text_size=size.small, bgcolor=color.black)
+        else
+            table.cell(values_table, col_idx, 1, "N/A", text_color=color.white, text_size=size.small, bgcolor=color.black)
+        col_idx += 1
+    
+    // Buy values
+    if enableBuySignals
+        table.cell(values_table, col_idx, 0, "Buy 22", text_color=color.white, text_size=size.small, bgcolor=color.black)
+        table.cell(values_table, col_idx, 1, str.tostring(buy1, "#.##"), text_color=color.white, text_size=size.small, bgcolor=color.black)
+        col_idx += 1
+        
+        table.cell(values_table, col_idx, 0, "Buy 66", text_color=color.white, text_size=size.small, bgcolor=color.black)
+        table.cell(values_table, col_idx, 1, str.tostring(buy2, "#.##"), text_color=color.white, text_size=size.small, bgcolor=color.black)
+        col_idx += 1
+        
+        table.cell(values_table, col_idx, 0, "Buy 132", text_color=color.white, text_size=size.small, bgcolor=color.black)
+        table.cell(values_table, col_idx, 1, str.tostring(buy3, "#.##"), text_color=color.white, text_size=size.small, bgcolor=color.black)
+        col_idx += 1
+    
+    // Sell values
+    if enableSellSignals
+        table.cell(values_table, col_idx, 0, "Sell 22", text_color=color.white, text_size=size.small, bgcolor=color.black)
+        table.cell(values_table, col_idx, 1, str.tostring(sell1, "#.##"), text_color=color.white, text_size=size.small, bgcolor=color.black)
+        col_idx += 1
+        
+        table.cell(values_table, col_idx, 0, "Sell 66", text_color=color.white, text_size=size.small, bgcolor=color.black)
+        table.cell(values_table, col_idx, 1, str.tostring(sell2, "#.##"), text_color=color.white, text_size=size.small, bgcolor=color.black)
+        col_idx += 1
+        
+        table.cell(values_table, col_idx, 0, "Sell 132", text_color=color.white, text_size=size.small, bgcolor=color.black)
+        table.cell(values_table, col_idx, 1, str.tostring(sell3, "#.##"), text_color=color.white, text_size=size.small, bgcolor=color.black)
+        col_idx += 1
 
 // =============================================================================
 // VISUAL DISPLAY & STYLING
 // =============================================================================
 
-// Zero reference line
-hline(0, "Zero Line", color=color.white, linewidth=1)
+// Reference line at 0 (baseline)
+hline(0, "Reference Level", color=color.white, linewidth=1)
+// VIX baseline at offset level (100) - identical style to reference line at 0
+hline(enableVIX ? vixOffset : na, "VIX Baseline", color=color.white, linewidth=1)
+// VIX threshold line (30 + offset = 130)
+hline(enableVIX ? (vixThreshold + vixOffset) : na, "VIX Threshold", color=color.new(color.orange, 50), linewidth=1, linestyle=hline.style_dotted)
 
 // VixFix Buy signal plots - Green shades
-plot(buy1, title="Buy Short (22d)", color=color.new(color.green, 60), linewidth=1)
-plot(buy2, title="Buy Medium (66d)", color=color.new(color.green, 50), linewidth=1)
-plot(buy3, title="Buy Long (132d)", color=color.new(color.green, 40), linewidth=1)
+plot(enableBuySignals ? buy1 : na, title="Buy Short (22d)", color=color.new(color.green, 60), linewidth=1)
+plot(enableBuySignals ? buy2 : na, title="Buy Medium (66d)", color=color.new(color.green, 50), linewidth=1)
+plot(enableBuySignals ? buy3 : na, title="Buy Long (132d)", color=color.new(color.green, 40), linewidth=1)
 
 // Inverse VixFix Sell signal plots - Red shades
-plot(sell1, title="Sell Short (22d)", color=color.new(color.red, 60), linewidth=1)
-plot(sell2, title="Sell Medium (66d)", color=color.new(color.red, 50), linewidth=1)
-plot(sell3, title="Sell Long (132d)", color=color.new(color.red, 40), linewidth=1)
+plot(enableSellSignals ? sell1 : na, title="Sell Short (22d)", color=color.new(color.red, 60), linewidth=1)
+plot(enableSellSignals ? sell2 : na, title="Sell Medium (66d)", color=color.new(color.red, 50), linewidth=1)
+plot(enableSellSignals ? sell3 : na, title="Sell Long (132d)", color=color.new(color.red, 40), linewidth=1)
 
-// Background intensity coloring based on signal strength
-buy_count = (buy1 < 0 ? 1 : 0) + (buy2 < 0 ? 1 : 0) + (buy3 < 0 ? 1 : 0)
-sell_count = (sell1 > 0 ? 1 : 0) + (sell2 > 0 ? 1 : 0) + (sell3 > 0 ? 1 : 0)
+// VIX plot starting from offset value (100) - orange and thinnest line
+vix_plot = plot(enableVIX ? vix_display : na, title="VIX", color=color.new(color.orange, 0), linewidth=1)
 
-// Dynamic background color based on signal intensity
-bg_color = buy_count == 1 ? color.new(color.green, 85) : 
-           buy_count == 2 ? color.new(color.green, 75) : 
-           buy_count == 3 ? color.new(color.green, 65) : 
-           sell_count == 1 ? color.new(color.red, 85) : 
-           sell_count == 2 ? color.new(color.red, 75) : 
-           sell_count == 3 ? color.new(color.red, 65) : na
+// =============================================================================
+// RANGE-BASED BACKGROUND HIGHLIGHTING
+// =============================================================================
 
-bgcolor(bg_color, title="Signal Intensity Background")
+// Boundary plots at key levels — these do not alter chart scaling
+zero_boundary = plot(0, color=na, display=display.none)
+highlight_ceiling_plot = plot((enableBuySignals or enableVIX) ? vixOffset : na, color=na, display=display.none)
+highlight_floor_plot = plot(enableSellSignals ? -vixOffset : na, color=na, display=display.none)
+
+// Determine how many buy/sell series are beyond their neutral levels
+buy_hits = enableBuySignals ? ((buy1 < 0 ? 1 : 0) + (buy2 < 0 ? 1 : 0) + (buy3 < 0 ? 1 : 0)) : 0
+sell_hits = enableSellSignals ? ((sell1 > 0 ? 1 : 0) + (sell2 > 0 ? 1 : 0) + (sell3 > 0 ? 1 : 0)) : 0
+
+// Highlight colours based on intensity
+buy_fill_color = buy_hits == 0 ? na : buy_hits == 1 ? color.new(color.green, 85) : buy_hits == 2 ? color.new(color.green, 75) : color.new(color.green, 65)
+sell_fill_color = sell_hits == 0 ? na : sell_hits == 1 ? color.new(color.red, 85) : sell_hits == 2 ? color.new(color.red, 75) : color.new(color.red, 65)
+
+// Buy highlight: fill from 0 up to the offset ceiling (100 by default) when any buy series is below 0
+fill(zero_boundary, highlight_ceiling_plot, color=buy_fill_color, title="Buy Highlight (0-100)")
+
+// Sell highlight: fill from 0 down to the negative offset when any sell series is above 0
+fill(zero_boundary, highlight_floor_plot, color=sell_fill_color, title="Sell Highlight (<0)")
+
+// VIX fill: extend upwards from 100 when VIX exceeds its threshold
+vix_fill_upper = plot(enableVIX and vix_crossed_threshold ? vix_display : na, color=na, display=display.none)
+fill(highlight_ceiling_plot, vix_fill_upper, color=vix_crossed_threshold ? color.new(color.orange, 65) : na, title="VIX Highlight (100+)")
