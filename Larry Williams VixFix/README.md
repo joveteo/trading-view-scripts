@@ -1,6 +1,6 @@
 # Larry Williams VixFix Indicator
 
-[Larry Williams VixFix Indicator](https://www.tradingview.com/script/TXPkMxfZ-Larry-Williams-VixFix/) is a TradingView Pine Script indicator based on Larry Williams' VixFix methodology that identifies potential market bottoms (buy signals) and tops (sell signals) through multi-timeframe volatility analysis approach with statistics tracking and customisable parameters. Important to note that this indicator reprints, therefore actions should be taken after bar close instead of during.
+Larry Williams VixFix Indicator is a TradingView Pine Script indicator based on [Larry Williams' VixFix methodology](https://www.tradingview.com/script/TXPkMxfZ-Larry-Williams-VixFix/) that identifies potential market bottoms (buy signals) and tops (sell signals) through multi-timeframe volatility analysis approach with statistics tracking and customisable parameters. Important to note that this indicator reprints, therefore actions should be taken after bar close instead of during.
 
 ## 📋 Overview
 
