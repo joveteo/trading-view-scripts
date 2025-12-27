@@ -1,6 +1,6 @@
 # Opening Range Breakout (ORB) Indicator
 
-Opening Range Breakout Indicator is a comprehensive TradingView Pine Script indicator that identifies and tracks opening range breakouts with customisable duration, advanced statistics tracking, dynamic visual feedback, and comprehensive session trend analysis.
+Opening Range Breakout Indicator is a TradingView Pine Script indicator that identifies and tracks opening range breakouts. The motivation for this script stems from the limitation of many broker's charting software. They only limit to preset indicators and drawings, which are not frequently updated or lack customisation options that aid users' experience. I found that a custom TradingView script can resolve this gap in my workflow
 
 ## 📚 Table of Contents
 
@@ -19,43 +19,26 @@ Opening Range Breakout Indicator is a comprehensive TradingView Pine Script indi
 
 ## 📋 Overview
 ![opening-range-breakout-spy-sample](/media/opening-range-breakout-spy-sample.png)
-The Opening Range Breakout indicator captures the high and low of the first N minutes after market open and draws horizontal lines to track potential breakouts. This tool is particularly useful for options traders looking to capture premium decay by opening vertical spreads on the other side of the opening range.
+The Opening Range Breakout indicator captures the high and low of the first N minutes after market open and draws horizontal lines to view potential breakouts. A triangle arrow will be shown when a breakout is identified at the candle close. Caveat is that multiple breakout may occure and therefore multiple arrow will be shown. 
 
 ## 🎯 Recommended Trading Actions
 
 > **⚠️ IMPORTANT DISCLAIMER**: The following are educational examples only. Always implement proper risk management with stop losses and take profits. See [DISCLAIMER.md](../DISCLAIMER.md) for full legal disclaimers. The author is not liable for any trading decisions or outcomes.
 
-### 📈 Breakout Scenarios & Suggested Responses
+### 📈 Breakout Scenarios
 
 #### 🔴 Opening Range High Breakout
-**Potential Action**: Consider selling put spreads or put options
-- **Logic**: Upward momentum suggests bullish continuation
-- **Risk Management**: Set stop loss below opening range low
-- **Take Profit**: Target 1-2x opening range width above breakout
+- **Logic**: Breakout above the opening range high suggests that price might move further upwards.
 
 #### 🔵 Opening Range Low Breakout
-**Potential Action**: Consider selling call spreads or call options
-- **Logic**: Downward momentum suggests bearish continuation
-- **Risk Management**: Set stop loss above opening range high
-- **Take Profit**: Target 1-2x opening range width below breakout
+- **Logic**: Breakout below the opening range low suggests that price might move further downwards.
 
 #### 🟡 Width Error Days
-**Potential Action**: Avoid trading or use range-bound strategies
-- **Logic**: Insufficient volatility for meaningful breakouts
-- **Alternative**: Consider iron condors or strangles
-
-### 📊 Statistical-Based Decisions
-- **High Profit Rate Markets**: More aggressive position sizing
-- **High Error Rate Markets**: Focus on range-bound strategies
-- **Consistent Breakout Direction**: Bias trades toward historical tendency
-
-### 🛡️ Critical Risk Management
+- **Logic**: Width less then 0.2% of the opening suggests that the traded range might not be valid and chances of reversal will be higher. 
 
 #### ✅ Essential Requirements
-- **Stop Losses**: Always use stops at opening range boundaries
 - **Position Sizing**: Never risk more than 1-2% of account per trade
 - **Take Profits**: Set realistic targets based on historical range data
-- **Time Limits**: Close positions before market close or set time limits
 - **Volatility Awareness**: Adjust strategies based on width error frequency
 
 #### ⛔ Trading Warnings
