@@ -1,6 +1,6 @@
 # TradingView Scripts & Strategies
 
-A collection of custom TradingView Pine Script™ indicators and strategies for technical analysis and algorithmic trading. This repository contains professionally developed tools with comprehensive documentation, statistics tracking, and risk management features.
+Collection of custom TradingView Pine Script™ indicators and strategies for technical analysis and algorithmic trading.
 
 ## 📚 Table of Contents
 
@@ -18,7 +18,7 @@ A collection of custom TradingView Pine Script™ indicators and strategies for 
 
 ## 📋 Overview
 
-This repository provides traders with advanced technical analysis tools designed for modern trading platforms. Each indicator includes comprehensive features such as customisable parameters, statistical analysis, visual feedback, and detailed documentation to support informed trading decisions.
+Each indicator is made to solve gaps that I have identified in my workflow.
 
 ## 📊 Available Indicators
 
@@ -34,7 +34,7 @@ This repository provides traders with advanced technical analysis tools designed
 ### Opening Range Breakout (ORB)
 - **Path:** [Opening Range Breakout/](https://github.com/joveteo/trading-view-scripts/tree/main/Opening%20Range%20Breakout)
 - **Description:**
-  A comprehensive indicator that identifies and tracks opening range breakouts with customisable duration, advanced statistics tracking, dynamic visual feedback, and session trend analysis.
+  Identifies and tracks opening range breakouts with customisable duration, advanced statistics tracking, dynamic visual feedback, and session trend analysis.
   - Customisable opening range from 1 to 480 minutes
   - Dynamic range fill with colour-coded session status
   - Advanced breakout logic with first-signal priority
