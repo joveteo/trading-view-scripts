@@ -19,7 +19,7 @@ Opening Range Breakout Indicator is a TradingView Pine Script indicator that ide
 
 ## 📋 Overview
 ![opening-range-breakout-spy-sample](/media/opening-range-breakout-spy-sample.png)
-The Opening Range Breakout indicator captures the high and low of the first N minutes after market open and draws horizontal lines to view potential breakouts. A triangle arrow will be shown when a breakout is identified at the candle close. Caveat is that multiple breakout may occure and therefore multiple arrow will be shown. 
+The Opening Range Breakout indicator captures the high and low of the first N minutes after market open and draws horizontal lines to view potential breakouts. A triangle arrow is shown when a breakout is confirmed at bar close. With **No Bias** mode, one arrow fires per direction on the first close beyond ORH/ORL. With **Daily Bias** mode, signals may be delayed until an extended target is reached.
 
 ## 🎯 Recommended Trading Actions
 
@@ -79,7 +79,7 @@ The Opening Range Breakout indicator captures the high and low of the first N mi
 ## 🚀 Installation
 
 1. Open TradingView and navigate to the Pine Editor
-2. Copy the contents of `opening_range_breakout.pine`
+2. Copy the contents of `opening_range_breakout`
 3. Paste into the Pine Editor
 4. Click "Add to Chart"
 5. Configure your desired settings in the indicator inputs
@@ -88,83 +88,111 @@ The Opening Range Breakout indicator captures the high and low of the first N mi
 
 ### Input Parameters
 
-#### Core Settings
+#### Opening Range Period
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| Opening Range Duration | Integer | 60 | Duration in minutes for the opening range (1-480) |
-| Trading Session | Session | 0930-1600 | Market session times (HHMM-HHMM format) |
-| Session Timezone | String | America/New_York | Timezone for the trading session |
+| Opening Range Period | Timeframe | 60 | Duration for calculating the opening range (e.g. 60 = first hour) |
+| Use Custom Range | Boolean | false | Override chart session with a custom time session |
+| Custom Session | Session | 0930-1030 | Custom opening range window (HHMM-HHMM) when enabled |
+| Timezone | String | UTC-5 | Timezone for custom session and cutoff |
+| Market Hours | Session | 0930-1600 | Table ORH/ORL visibility and market-close countdown only |
+| Opening Range Width Threshold % | Float | 0.2 | Minimum OR width as % of session open; below = untradable |
+| VIX Untradable Threshold | Float | 20.0 | Daily VIX open above this marks the day untradable |
+
+**Session behavior:** By default, the opening range follows the **chart session** plus the Opening Range Period timeframe. Enable **Use Custom Range** to define an explicit session window.
+
+#### Historical Display
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
 | Show Historical Data | Boolean | true | Display data from previous sessions |
 
-#### Visual Controls
+#### Breakout Signals & Style
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| Show Statistics Table | Boolean | true | Display/hide statistics table for mobile compatibility |
-| Show Opening Range Lines | Boolean | true | Display range lines on chart |
-| Line Transparency | Integer | 88 | Transparency percentage for range lines (0-100) |
+| Show Breakout Signals | Boolean | true | Display triangular signals on breakout |
+| Signal Bias | String | No Bias | No Bias: first close beyond ORH/ORL. Daily Bias: delayed signals at extended targets |
+| Signal Size / Colours | Various | — | Customise signal appearance |
+| OR Levels / Target Colours | Colour | Various | Customise range lines, targets, and fill |
+
+#### Scoring & Cutoff
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Breakout Cutoff Hour / Minute | Int | 12:00 | After this time, new breakouts are ignored if none occurred |
+| Profit Points | Int | 100 | Points for a profitable breakout day |
+| Loss Tier 1/2/3 Points | Int | -500 / -1000 / -1500 | Points deducted by adverse move tier |
+| Loss Distance Tier 1/2 | Float | 5 / 10 | Distance thresholds for loss tiers |
 
 #### Session Status Colours
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| Width Error Colour | Colour | Yellow | Colour for days with opening range < 0.2% of open price |
-| Profit Colour | Colour | Green | Colour for profitable breakout days |
-| Loss Colour | Colour | Red | Colour for loss breakout days |
-| Error Colour | Colour | Blue | Colour for days with no breakout |
+| Untradable Day Colour | Colour | Yellow | Width-error or VIX-untradable days |
+| Profit Colour | Colour | Green | Profitable breakout days |
+| Loss Colour | Colour | Red | Failed breakout days |
+| Error Colour | Colour | Blue | No breakout during the session |
+
+#### Table
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Show Statistics Table | Boolean | true | Display/hide the statistics table |
+| Show Backtest | Boolean | true | Sessions, Profit, Loss, Error, Untradable, Points columns |
+| Table Location / Text Size | String | Top Right / Small | Table placement and sizing |
 
 #### Session Trend Indicators
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| Show SMA/EMA/RMA/WMA | Boolean | false | Enable various moving averages |
-| MA Lengths | Integer | 20 | Period for moving average calculations |
-| Show Anchor VWAP | Boolean | false | Display VWAP anchored to daily open |
-| Indicator Colours | Colour | Various | Customisable colours for trend indicators |
+| SMA / EMA / RMA / WMA | Boolean | false | Session-reset adaptive moving averages |
+| MA Lengths | Integer | 20 | Period for each enabled MA |
+| Anchor VWAP | Boolean | true | Session VWAP using close × volume, anchored to session open |
 
 ### Recommended Settings
 
 **For Stock Market (US):**
-- Duration: 30-60 minutes
-- Session: 0930-1600
-- Timezone: America/New_York
+- Opening Range Period: 60 minutes
+- Timezone: UTC-5 (Eastern)
+- Enable Custom Range with 0930-1030 if chart session differs from RTH
 
 **For Forex (24/7):**
-- Duration: 60-120 minutes
-- Session: Custom based on your preferred market hours
+- Opening Range Period: 60–120 minutes
+- Enable Custom Range for your preferred session window
 - Timezone: Match your broker's timezone
 
 **For Futures:**
-- Duration: 30-90 minutes
-- Session: Match specific contract hours
-- Timezone: America/Chicago (for most US futures)
+- Opening Range Period: 30–90 minutes
+- Enable Custom Range to match contract hours
+- Timezone: UTC-6 (Chicago) for most US futures
 
 ## 🔔 Setting Up Alerts
 
-1. Right-click on the indicator in your chart
-2. Select "Add Alert"
-3. Choose from available alert conditions:
-   - ORB High Breakout
-   - ORB Low Breakout
-   - Any ORB Breakout
-4. Configure notification preferences
-5. Set alert frequency as needed
+1. Right-click on the chart and select **Add Alert**
+2. Under **Condition**, choose this indicator
+3. Select one of the available alert conditions:
+   - **ORB High Breakout** — first confirmed bar close above ORH on a tradable day
+   - **ORB Low Breakout** — first confirmed bar close below ORL on a tradable day
+   - **Any ORB Breakout** — either high or low breakout
+4. Set **Frequency** to **Once Per Bar Close** for reliable end-of-bar signals
+5. Configure notification preferences and expiration
+
+Alerts include dynamic placeholders (`{{ticker}}`, `{{close}}`, `{{interval}}`) in the default message. Alerts do not fire on untradable days or after the breakout cutoff when no breakout has occurred.
 
 ## 🛠️ Troubleshooting
 
 ### Common Issues
 
 **Lines Not Appearing:**
-- Check that "Show Opening Range Lines" is enabled
-- Verify timeframe allows intraday viewing
-- Confirm trading session matches your market
+- Verify the chart timeframe is intraday (less than 1 day)
+- Confirm the opening range period has completed for the current session
+- Check that sufficient session bars exist on the chart
 
 **No Statistics:**
 - Ensure sufficient historical data is available
-- Check that "Show Statistics" is enabled
-- Verify the indicator has been running for multiple days
+- Enable **Show Statistics Table** and **Show Backtest** in Table Columns
+- Verify the indicator has processed multiple sessions
 
 **Alerts Not Working:**
-- Confirm "Enable Breakout Alerts" is checked
-- Verify TradingView alert settings
-- Check that you have a TradingView Pro account
+- Select an alert condition from the indicator (ORB High/Low/Any Breakout)
+- Set frequency to **Once Per Bar Close**
+- Confirm the day is tradable (width and VIX thresholds met)
+- Re-create alerts if you updated the indicator (alert titles may have changed)
 
 **Table Not Displaying:**
 - Ensure "Show Statistics Table" is enabled
@@ -173,31 +201,45 @@ The Opening Range Breakout indicator captures the high and low of the first N mi
 
 ## 📊 Understanding the Statistics
 
-The indicator tracks four key session outcomes with colour-coded visual feedback:
+The indicator tracks session outcomes with colour-coded visual feedback:
 
-### 📋 Session Categories
+### Session Categories
 
-1. **🟡 Width Error Days**: Opening range width < 0.2% of opening price (insufficient volatility)
-2. **🟢 Profit Days**: Breakout occurred with favourable price movement beyond the range
-3. **🔴 Loss Days**: Breakout occurred but price reversed unfavourably
-4. **🔵 Error Days**: No breakout occurred during the session
+1. **Untradable Days** (yellow): Opening range width below threshold, or daily VIX open above threshold — excluded from profit/loss/error percentages
+2. **Profit Days** (green): Breakout occurred with favourable close relative to the range
+3. **Loss Days** (red): Breakout occurred but close reversed unfavourably
+4. **Error Days** (blue): No breakout before session end (or cutoff with no breakout)
 
-### 📈 Enhanced Analytics
+### Breakout Detection
 
-- **First Breakout Priority**: When both high and low are hit, profit/loss calculated from first signal
-- **Dynamic Range Fill**: Area between OR lines coloured based on session outcome
-- **Colour-Coordinated Table**: Statistics table uses matching custom colours for easy identification
-- **Performance Percentages**: Detailed breakdown with visual colour feedback
+Breakouts are detected when price **closes beyond ORH or ORL** on a confirmed bar. Gap opens above/below the range count as breakouts on the first qualifying bar close. Signals (No Bias) and alerts use the same rule. Daily Bias mode delays signal arrows until an extended target crossover.
+
+### Table Columns (Backtest)
+
+| Column | Description |
+|--------|-------------|
+| Sessions | Total sessions processed |
+| Profit / Loss / Error | Count and **percentage of tradable days** (excludes untradable) |
+| Untradable | Count of width-error and VIX-filtered days |
+| Points | Running score from configurable profit/loss tiers |
+
+### Enhanced Analytics
+
+- **First Breakout Priority**: When both high and low are hit, profit/loss uses whichever broke first
+- **Dynamic Range Fill**: Area between OR lines coloured by session outcome
+- **Points System**: Configurable profit points and tiered loss penalties by adverse move distance
 
 
 
 ## ⚠️ Important Notes
 
-1. **Timeframe Compatibility**: Ensure your chart timeframe allows viewing of intraday price action
-2. **Market Hours**: The indicator automatically detects market sessions but verify timezone settings
-3. **Data Quality**: Statistics improve with more historical data
-4. **Performance**: Large line counts may impact chart performance on lower-end devices
-5. **Reprinting**: This indicator reprints, actions should be taken after bar close
+1. **Timeframe Compatibility**: Use an intraday chart timeframe (less than 1 day)
+2. **Opening Range Timing**: Default mode uses the **chart session** + Opening Range Period; enable Custom Range for explicit control
+3. **Market Hours Input**: Controls table ORH/ORL display and countdown only — not opening range timing
+4. **Data Quality**: Statistics improve with more historical data
+5. **Performance**: Large line/label counts with historical data enabled may impact chart performance
+6. **Bar Close**: Breakouts, signals (No Bias), and alerts fire on **confirmed bar close** — wait for the bar to close before acting
+7. **Daily Bias Signals**: Use extended-target crossovers and may fire later than the initial breakout
 
 ## ⚠️ Disclaimer
 
