@@ -4,17 +4,19 @@ Collection of custom TradingView Pine Script™ indicators and strategies for te
 
 ## 📚 Table of Contents
 
-- [TradingView Scripts \& Strategies](#tradingview-scripts--strategies)
+- [TradingView Scripts](#tradingview-scripts--strategies)
   - [📚 Table of Contents](#-table-of-contents)
   - [📋 Overview](#-overview)
   - [📊 Available Indicators](#-available-indicators)
     - [All Moving Averages](#all-moving-averages)
     - [Opening Range Breakout (ORB)](#opening-range-breakout-orb)
+    - [Custom VIX](#custom-vix)
     - [Larry Williams VixFix](#larry-williams-vixfix)
   - [🚀 Installation](#-installation)
   - [⚠️ Important Notes](#️-important-notes)
-  - [🤝 Contributing](#-contributing)
   - [📄 License](#-license)
+
+
 
 ## 📋 Overview
 
@@ -22,34 +24,55 @@ Each indicator is made to solve gaps that I have identified in my workflow.
 
 ## 📊 Available Indicators
 
+
+
 ### All Moving Averages
+
 - **Path:** [All Moving Averages/](https://github.com/joveteo/trading-view-scripts/tree/main/All%20Moving%20Averages)
 - **Description:**
-  A comprehensive indicator featuring 14 different moving averages (SMA, EMA, WMA, HMA, VWMA, RMA, DEMA, TEMA, KAMA, ALMA, LSMA, TMA, ZLEMA) with multiple configurable lengths for each type.
+A comprehensive indicator featuring 14 different moving averages (SMA, EMA, WMA, HMA, VWMA, RMA, DEMA, TEMA, KAMA, ALMA, LSMA, TMA, ZLEMA) with multiple configurable lengths for each type.
   - User-friendly tooltips for each input
   - Unique colour for each MA type with progressively darker tones for higher lengths
   - Option to overlay on the main chart or display in a separate pane
   - Designed to help users bypass TradingView's indicator limit by combining many MAs in one script
 
+
+
 ### Opening Range Breakout (ORB)
+
 - **Path:** [Opening Range Breakout/](https://github.com/joveteo/trading-view-scripts/tree/main/Opening%20Range%20Breakout)
 - **Description:**
-  Identifies and tracks opening range breakouts with customisable duration, advanced statistics tracking, dynamic visual feedback, and session trend analysis.
+Identifies and tracks opening range breakouts with customisable duration, advanced statistics tracking, dynamic visual feedback, and session trend analysis.
   - Customisable opening range from 1 to 480 minutes
   - Dynamic range fill with colour-coded session status
   - Advanced breakout logic with first-signal priority
   - Session trend indicators (SMA, EMA, RMA, WMA, Anchor VWAP)
   - Customisable statistics table with colour coordination
 
+
+
+### Custom VIX
+
+- **Path:** [Custom-Vix/](https://github.com/joveteo/trading-view-scripts/tree/main/Custom-Vix)
+- **Description:**
+Plots daily VIX close in a separate pane and highlights periods when VIX exceeds a configurable threshold.
+  - Daily VIX series with adjustable symbol (default: CBOE:VIX)
+  - Configurable threshold line with pane shading above the level
+  - Adjustable shade opacity for readability
+
+
+
 ### Larry Williams VixFix
+
 - **Path:** [Larry Williams VixFix/](https://github.com/joveteo/trading-view-scripts/tree/main/Larry%20Williams%20VixFix)
 - **Description:**
-  An implementation of the Larry Williams VixFix indicator for identifying market bottoms and tops through multi-timeframe volatility analysis.
+An implementation of the Larry Williams VixFix indicator for identifying market bottoms and tops through multi-timeframe volatility analysis.
   - Configurable lengths for buy and sell signals (default 22, 66, 132 days)
   - Dynamic background colouring with intensity-based visual feedback
   - Statistical analysis with performance tracking
   - Mobile-friendly table display options
-  - Educational trading recommendations with risk management guidelines
+
+
 
 ## 🚀 Installation
 
@@ -59,6 +82,8 @@ Each indicator is made to solve gaps that I have identified in my workflow.
 4. Click "Add to Chart"
 5. Configure your preferred settings in the indicator inputs
 
+
+
 ## ⚠️ Important Notes
 
 - **Educational Purpose**: All tools are for educational and informational purposes only
@@ -67,12 +92,7 @@ Each indicator is made to solve gaps that I have identified in my workflow.
 - **Backtesting**: Test on historical data before applying to live trading
 - **Disclaimer**: See [DISCLAIMER.md](DISCLAIMER.md) for full legal disclaimer
 
-## 🤝 Contributing
 
-Contributions, suggestions, and improvements are welcome! Please:
-- Open an issue for bug reports or feature requests
-- Submit a pull request for code contributions
-- Follow the existing code style and documentation standards
 
 ## 📄 License
 
