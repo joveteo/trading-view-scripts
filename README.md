@@ -28,7 +28,7 @@ Each indicator is made to solve gaps that I have identified in my workflow.
 
 ### All Moving Averages
 
-- **Path:** [All Moving Averages/](https://github.com/joveteo/trading-view-scripts/tree/main/All%20Moving%20Averages)
+- **Script:** [`all-moving-averages-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/All%20Moving%20Averages/all-moving-averages-indicator-script)
 - **Description:**
 A comprehensive indicator featuring 14 different moving averages (SMA, EMA, WMA, HMA, VWMA, RMA, DEMA, TEMA, KAMA, ALMA, LSMA, TMA, ZLEMA) with multiple configurable lengths for each type.
   - User-friendly tooltips for each input
@@ -40,7 +40,7 @@ A comprehensive indicator featuring 14 different moving averages (SMA, EMA, WMA,
 
 ### Opening Range Breakout (ORB)
 
-- **Path:** [Opening Range Breakout/](https://github.com/joveteo/trading-view-scripts/tree/main/Opening%20Range%20Breakout)
+- **Script:** [`opening-range-breakout-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/Opening%20Range%20Breakout/opening-range-breakout-indicator-script)
 - **Description:**
 Identifies and tracks opening range breakouts with customisable duration, advanced statistics tracking, dynamic visual feedback, and session trend analysis.
   - Customisable opening range from 1 to 480 minutes
@@ -53,7 +53,7 @@ Identifies and tracks opening range breakouts with customisable duration, advanc
 
 ### Custom VIX
 
-- **Path:** [Custom-Vix/](https://github.com/joveteo/trading-view-scripts/tree/main/Custom-Vix)
+- **Script:** [`custom-vix-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/Custom-Vix/custom-vix-indicator-script)
 - **Description:**
 Plots daily VIX close in a separate pane and highlights periods when VIX exceeds a configurable threshold.
   - Daily VIX series with adjustable symbol (default: CBOE:VIX)
@@ -64,7 +64,7 @@ Plots daily VIX close in a separate pane and highlights periods when VIX exceeds
 
 ### Larry Williams VixFix
 
-- **Path:** [Larry Williams VixFix/](https://github.com/joveteo/trading-view-scripts/tree/main/Larry%20Williams%20VixFix)
+- **Script:** [`larry-williams-vixfix-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/Larry%20Williams%20VixFix/larry-williams-vixfix-indicator-script)
 - **Description:**
 An implementation of the Larry Williams VixFix indicator for identifying market bottoms and tops through multi-timeframe volatility analysis.
   - Configurable lengths for buy and sell signals (default 22, 66, 132 days)
@@ -77,7 +77,7 @@ An implementation of the Larry Williams VixFix indicator for identifying market 
 ## 🚀 Installation
 
 1. Open TradingView and navigate to the Pine Editor
-2. Copy the complete script code from the desired indicator folder
+2. Copy the contents of the indicator script file listed above (e.g. `all-moving-averages-indicator-script`)
 3. Paste into the Pine Editor
 4. Click "Add to Chart"
 5. Configure your preferred settings in the indicator inputs

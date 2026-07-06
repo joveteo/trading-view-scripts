@@ -13,7 +13,7 @@ Custom VIX is a TradingView Pine Script indicator that plots daily VIX close val
 ## 🚀 Installation
 
 1. Open TradingView and navigate to the Pine Editor
-2. Copy the contents of `custom-vix-indicator`
+2. Copy the contents of `custom-vix-indicator-script`
 3. Paste into the Pine Editor
 4. Click "Add to Chart"
 5. Configure your preferred settings in the indicator inputs

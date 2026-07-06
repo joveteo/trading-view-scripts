@@ -27,7 +27,7 @@ This indicator provides a complete toolkit for trend analysis by plotting 14 maj
 ## 🚀 Installation
 
 1. Open TradingView and navigate to the Pine Editor
-2. Copy the complete script code
+2. Copy the contents of `all-moving-averages-indicator-script`
 3. Paste into the Pine Editor
 4. Click "Add to Chart"
 5. Configure your preferred settings in the indicator inputs

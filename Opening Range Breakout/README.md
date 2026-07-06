@@ -34,7 +34,7 @@ Opening Range Breakout Indicator is a TradingView Pine Script indicator that ide
 ## 🚀 Installation
 
 1. Open TradingView and navigate to the Pine Editor
-2. Copy the contents of `opening_range_breakout`
+2. Copy the contents of `opening-range-breakout-indicator-script`
 3. Paste into the Pine Editor
 4. Click "Add to Chart"
 5. Configure your desired settings in the indicator inputs
