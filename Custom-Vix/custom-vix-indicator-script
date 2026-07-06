@@ -1,3 +1,6 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// Source https://github.com/joveteo/trading-view-scripts/tree/main/Custom-Vix/custom-vix-indicator-script
+// © iLanat8
 //@version=6
 indicator("Custom VIX - 1D VIX Highlight", "VIX 1D Highlight", overlay = false)
 
