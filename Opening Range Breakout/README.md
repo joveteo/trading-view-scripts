@@ -1,6 +1,6 @@
 # Opening Range Breakout (ORB) Indicator
 
-Opening Range Breakout Indicator is a TradingView Pine Script indicator that identifies and tracks opening range breakouts. The motivation for this script stems from the limitation of many broker's charting software. They only limit to preset indicators and drawings, which are not frequently updated or lack customisation options that aid users' experience. I found that a custom TradingView script can resolve this gap in my workflow
+Opening Range Breakout Indicator is a TradingView Pine Script indicator that identifies and tracks opening range breakouts. The motivation for this script stems from the limitation of many broker's charting software. They only limit to preset indicators and drawings, which are not frequently updated or lack customisation options that aid users' experience. I found that a custom TradingView script can resolve this gap in my workflow.
 
 ## 📚 Table of Contents
 
@@ -73,7 +73,7 @@ The Opening Range Breakout indicator captures the high and low of the first N mi
 ## 🚀 Installation
 
 1. Open TradingView and navigate to the Pine Editor
-2. Copy the contents of `opening_range_breakout`
+2. Copy the contents of `opening-range-breakout-indicator-script`
 3. Paste into the Pine Editor
 4. Click "Add to Chart"
 5. Configure your desired settings in the indicator inputs
@@ -237,8 +237,6 @@ Breakouts are detected when price **closes beyond ORH or ORL on a confirmed 1-mi
 - never substitutes coarse chart OHLC for unavailable one-minute data.
 
 The chart must contain bars spanning the configured Opening Range and Market Hours. Requesting an extended-session ticker cannot create host-chart periods that TradingView did not load.
-
-
 
 ## ⚠️ Important Notes
 

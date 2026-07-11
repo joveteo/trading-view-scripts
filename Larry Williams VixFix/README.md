@@ -45,7 +45,7 @@ The indicator generates two types of signals with intensity-based visual feedbac
 ## 🚀 Installation
 
 1. Open TradingView and navigate to the Pine Editor
-2. Copy the contents of `larry-williams-vixfix-indicator`
+2. Copy the contents of `larry-williams-vixfix-indicator-script`
 3. Paste into the Pine Editor
 4. Click "Add to Chart"
 5. Configure your desired settings in the indicator inputs
