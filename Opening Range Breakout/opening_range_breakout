@@ -10,15 +10,15 @@ indicator("Opening Range Breakout (Points)", shorttitle = "ORB Pts", overlay = t
 showHist = input.bool(true, title = "Show Historical Data", group = "Historical Display", tooltip = "When enabled, displays all historical opening range data from previous sessions. Disable to only show current session data.")
 
 // Opening Range Period
-orTF = input.timeframe("60", title = "Opening Range Period", group = "Opening Range Period", tooltip = "Duration for calculating the opening range. Default: 60 minutes (1 hour). This period determines how long after market open to establish the high/low range.")
+orTF = input.timeframe("60", title = "Opening Range Period", group = "Opening Range Period", tooltip = "Duration for calculating the opening range from the configured market open. Calculated from confirmed 1-minute data.")
 crTog = input.bool(false, title = "Use Custom Range", inline = "Custom", group = "Opening Range Period", tooltip = "Enable to override the default opening range with a custom time session.")
 crSesh = input.session("0930-1030", title = "Custom Session", inline = "Custom", group = "Opening Range Period", tooltip = "Define custom trading session (format: HHMM-HHMM). Example: 0930-1030 for 9:30 AM to 10:30 AM.")
-tz = input.string("UTC-5", title = "Timezone", group = "Opening Range Period", inline = "Custom", options = ["UTC-10", "UTC-8", "UTC-7", "UTC-6", "UTC-5", "UTC-4", "UTC-3", "UTC+0", "UTC+1", "UTC+2", "UTC+3", "UTC+3:30", "UTC+4", "UTC+5", "UTC+5:30", "UTC+5:45", "UTC+6", "UTC+6:30", "UTC+7", "UTC+8", "UTC+9", "UTC+9:30", "UTC+10", "UTC+11", "UTC+12", "UTC+12:45", "UTC+13"], tooltip = "Timezone for the custom session. UTC-5 is Eastern Time, UTC-8 is Pacific Time.")
-mktSesh = input.session("0930-1600", title = "Market Hours", group = "Opening Range Period", tooltip = "Controls table ORH/ORL visibility and market-close countdown only. Opening range timing uses chart session + Opening Range Period, or Custom Session when enabled.")
+tz = input.string("America/New_York", title = "Timezone", group = "Opening Range Period", inline = "Custom", tooltip = "IANA timezone used for opening range, market hours, and cutoff calculations. Example: America/New_York. IANA zones adjust automatically for daylight saving time.")
+mktSesh = input.session("0930-1600", title = "Market Hours", group = "Opening Range Period", tooltip = "Defines the scoring session. Breakouts and the final close are restricted to these hours.")
 orWidthThresholdPct = input.float(0.2, minval = 0.0, step = 0.05, title = "Opening Range Width Threshold %", group = "Opening Range Period", tooltip = "Minimum opening range width as a percentage of the session open. Days below this threshold are marked untradable and excluded from profit/loss statistics.") * 0.01
 vixUntradableThreshold = input.float(20.0, minval = 0.0, step = 0.5, title = "VIX Untradable Threshold", group = "Opening Range Period", tooltip = "If the daily VIX open is above this value, the day is marked untradable and excluded from profit/loss statistics.")
 widthErrorColor = input.color(color.yellow, title = "Untradable Day Color", group = "Opening Range Period", inline = "Colors1", tooltip = "Untradable Day Color (Yellow): Used when the opening range width is below the configured threshold or when the daily VIX open is above the VIX threshold. These days are excluded from profit/loss statistics.")
-profitColor = input.color(color.green, title = "Profit Color", group = "Opening Range Period", inline = "Colors1", tooltip = "Profit (Green): Successful breakout days where price breaks out of the opening range and closes in the profitable direction relative to the breakout level.")
+profitColor = input.color(color.green, title = "Profit Color", group = "Opening Range Period", inline = "Colors1", tooltip = "Profit (Green): A breakout occurred and the market-hours close did not cross the opposite opening-range boundary.")
 lossColor = input.color(color.red, title = "Loss Color", group = "Opening Range Period", inline = "Colors2", tooltip = "Loss (Red): Failed breakout days where price breaks out of the opening range but closes in the unprofitable direction. For example: breaks above OR high but closes below OR low, or breaks below OR low but closes above OR high.")
 errorColor = input.color(color.blue, title = "Error Color", group = "Opening Range Period", inline = "Colors2", tooltip = "Error (Blue): No breakout occurred during the trading session. Price remained within the opening range throughout the entire day.")
 
@@ -42,45 +42,20 @@ tSrc = input.string("Close", title = "Target Trigger Source", options = ["Close"
 tDispType = input.string("Adaptive", title = "Target Display Mode", options = ["Adaptive", "Extended"], group = "Targets", tooltip = "Adaptive: Shows/hides targets based on current price proximity\nExtended: All targets remain visible and extend to current bar")
 
 
-// Session Trend Indicators
-showSMA = input.bool(false, title = "Simple Moving Average", group = "Session Trend Indicators", inline = "SMA", tooltip = "Session-reset adaptive SMA (not standard ta.sma). Recalculates from each opening range start.")
-smaLen = input.int(20, title = "Length", minval = 1, maxval = 200, group = "Session Trend Indicators", inline = "SMA")
-smaColor = input.color(color.new(color.blue, 50), title = "Color", group = "Session Trend Indicators", inline = "SMA")
-
-showEMA = input.bool(false, title = "Exponential Moving Average", group = "Session Trend Indicators", inline = "EMA", tooltip = "Session-reset adaptive EMA (not standard ta.ema). Recalculates from each opening range start.")
-emaLen = input.int(20, title = "Length", minval = 1, maxval = 200, group = "Session Trend Indicators", inline = "EMA")
-emaColor = input.color(color.new(color.orange, 50), title = "Color", group = "Session Trend Indicators", inline = "EMA")
-
-showRMA = input.bool(false, title = "Relative Moving Average", group = "Session Trend Indicators", inline = "RMA", tooltip = "Session-reset adaptive RMA. Recalculates from each opening range start.")
-rmaLen = input.int(20, title = "Length", minval = 1, maxval = 200, group = "Session Trend Indicators", inline = "RMA")
-rmaColor = input.color(color.new(color.purple, 50), title = "Color", group = "Session Trend Indicators", inline = "RMA")
-
-showWMA = input.bool(false, title = "Weighted Moving Average", group = "Session Trend Indicators", inline = "WMA", tooltip = "Session-reset adaptive WMA. Recalculates from each opening range start.")
-wmaLen = input.int(20, title = "Length", minval = 1, maxval = 200, group = "Session Trend Indicators", inline = "WMA")
-wmaColor = input.color(color.new(color.yellow, 50), title = "Color", group = "Session Trend Indicators", inline = "WMA")
-
-showVWAP = input.bool(true, title = "Anchor VWAP", group = "Session Trend Indicators", inline = "VWAP", tooltip = "Session VWAP using close * volume, anchored to the session open price.")
-vwapColor = input.color(color.new(color.red, 50), title = "Color", group = "Session Trend Indicators", inline = "VWAP")
-
-
-
 // Table Configuration
 showTable = input.bool(true, title = "Show Statistics Table", group = "Table", tooltip = "Display/hide the statistics table. Disable for cleaner chart view or mobile usage.")
 tableLocation = input.string("Top Right", title = "Table Location", options = ["Top Right", "Bottom Right", "Bottom Left"], group = "Table", tooltip = "Choose where to place the statistics table.")
 tableTextSize = input.string("Small", title = "Table Text Size", options = ["Auto", "Huge", "Large", "Normal", "Small", "Tiny"], group = "Table", tooltip = "Set the table text size. Default Small.")
 
 // Table Column Visibility
-showBacktestColumns = input.bool(true, title = "Show Backtest", group = "Table Columns", tooltip = "Display backtest summary columns: Sessions, Profit, Loss, Error, Untradable, and Points.")
+showBacktestColumns = input.bool(true, title = "Show Backtest", group = "Table Columns", tooltip = "Display Sessions, Profit, Loss, Error, Untradable, Points, and one-minute coverage start.")
 
 // Scoring & Cutoff
 cutoffHour = input.int(12, title = "Breakout Cutoff Hour", minval = 0, maxval = 23, group = "Scoring & Cutoff", tooltip = "Hour (24h) after which new breakouts are ignored if none occurred yet. Uses the timezone from Opening Range Period.")
 cutoffMinute = input.int(0, title = "Breakout Cutoff Minute", minval = 0, maxval = 59, group = "Scoring & Cutoff", tooltip = "Minute component of the breakout cutoff time.")
 profitPoints = input.int(100, title = "Profit Points", minval = 1, group = "Scoring & Cutoff", tooltip = "Points awarded for a profitable breakout day.")
-lossPoints1 = input.int(-500, title = "Loss Tier 1 Points", maxval = 0, group = "Scoring & Cutoff", tooltip = "Points deducted when adverse move distance is below Loss Distance Tier 1.")
-lossPoints2 = input.int(-1000, title = "Loss Tier 2 Points", maxval = 0, group = "Scoring & Cutoff", tooltip = "Points deducted when adverse move distance is below Loss Distance Tier 2.")
-lossPoints3 = input.int(-1500, title = "Loss Tier 3 Points", maxval = 0, group = "Scoring & Cutoff", tooltip = "Points deducted when adverse move distance is at or above Loss Distance Tier 2.")
-lossDist1 = input.float(5.0, title = "Loss Distance Tier 1", minval = 0.0, step = 0.5, group = "Scoring & Cutoff", tooltip = "Adverse move distance threshold for Loss Tier 1 vs Tier 2.")
-lossDist2 = input.float(10.0, title = "Loss Distance Tier 2", minval = 0.0, step = 0.5, group = "Scoring & Cutoff", tooltip = "Adverse move distance threshold for Loss Tier 2 vs Tier 3.")
+lossPointsPerDollar = input.int(100, title = "Loss Points Per $1", minval = 1, group = "Scoring & Cutoff", tooltip = "Points deducted for each started $1 beyond the opposite opening-range boundary.")
+maxLossPoints = input.int(1500, title = "Maximum Loss Points", minval = 1, group = "Scoring & Cutoff", tooltip = "Maximum points deducted for one session. Default: 1500 points at $15 or more outside.")
 showWidthPctColumn = input.bool(true, title = "Show Width %", group = "Table Columns", tooltip = "Display the current opening range width as a percentage of the session open.")
 showMarketCloseColumn = input.bool(true, title = "Show Market Close", group = "Table Columns", tooltip = "Display the time remaining until market close.")
 showVIXColumn = input.bool(true, title = "Show VIX", group = "Table Columns", tooltip = "Display the current VIX value.")
@@ -95,57 +70,19 @@ color invis = color.rgb(0, 0, 0, 100)
 if timeframe.in_seconds(timeframe.period) >= timeframe.in_seconds("D")
     runtime.error("Timeframe too high! Please use a timeframe less than 1 day.")
 
+if timeframe.in_seconds(timeframe.period) < timeframe.in_seconds("1")
+    runtime.error("Timeframe too low! Please use a 1-minute or higher chart.")
+
 if orTF == ""
     runtime.error("Opening Range timeframe cannot be empty.")
+
+if timeframe.in_seconds(orTF) < timeframe.in_seconds("1")
+    runtime.error("Opening Range timeframe must be at least 1 minute.")
 
 if crTog and na(str.match(crSesh, "^[0-9]{4}-[0-9]{4}$"))
     runtime.error("Invalid custom session format. Use format: HHMM-HHMM")
 
 // UTILITY FUNCTIONS
-
-// Zero-safe function to prevent division by zero
-fz(_val) => _val == 0 ? 1 : _val
-
-// Session-based moving average calculation
-day_ma(_start, _type, source, length) =>
-    bars_since_start = fz(ta.barssince(_start))
-    valid_length = bars_since_start < length ? bars_since_start : length
-    var float ma = na
-    
-    if _type == "EMA"
-        k = 2 / (valid_length + 1)
-        ma := (source * k) + (nz(ma[1]) * (1 - k))
-    else if _type == "RMA"
-        alpha = 1 / valid_length
-        ma := alpha * source + (1 - alpha) * nz(ma[1])
-    else if _type == "SMA"
-        ma := ta.sma(source, valid_length)
-    else if _type == "WMA"
-        ma := ta.wma(source, valid_length)
-    ma
-
-
-
-// Session-based Anchor VWAP calculation anchored to daily open
-session_anchor_vwap(_start) =>
-    var float anchor_price = na
-    var float sum_pv = 0.0
-    var float sum_v = 0.0
-    
-    if _start
-        anchor_price := open  // Anchor to session opening price
-        sum_pv := 0.0
-        sum_v := 0.0
-    
-    float vwap_val = na
-    if not na(anchor_price)
-        float current_pv = close * volume
-        sum_pv += current_pv
-        sum_v += volume
-        vwap_val := sum_v > 0 ? sum_pv / sum_v : anchor_price
-    else
-        vwap_val := close
-    vwap_val
 
 // Line style converter
 linestyle(_input) =>
@@ -157,6 +94,12 @@ linestyle(_input) =>
 get_1up(_val) => (_val - math.floor(_val)) > 0 ? int(math.floor(_val) + 1) : int(_val)
 
 // Parse session end (HHMM-HHMM) into total minutes from midnight
+session_start_minutes(_session) =>
+    int slen = str.length(_session)
+    slen >= 4 ?
+      int(str.tonumber(str.substring(_session, 0, 2))) * 60 +
+      int(str.tonumber(str.substring(_session, 2, 4))) : na
+
 session_end_minutes(_session) =>
     int slen = str.length(_session)
     slen >= 9 ?
@@ -165,7 +108,7 @@ session_end_minutes(_session) =>
 
 // Format countdown as HH:MM
 fmt_hhmm(_minutes) =>
-    int hrs = _minutes / 60
+    int hrs = int(_minutes / 60)
     int mins = math.abs(_minutes % 60)
     str.tostring(hrs, "00") + ":" + str.tostring(mins, "00")
 
@@ -197,22 +140,48 @@ loss_adverse_distance(bool _broke_high, bool _broke_low, bool _first_high, bool 
     math.max(0.0, distance)
 
 is_session_untradable(float _orh, float _orl, float _open, float _vix_open) =>
-    if na(_orh) or na(_orl) or na(_open)
+    if na(_orh) or na(_orl) or na(_open) or na(_vix_open)
         true
     else
         float or_range = _orh - _orl
         float threshold = _open * orWidthThresholdPct
-        or_range < threshold or (not na(_vix_open) and _vix_open > vixUntradableThreshold)
+        or_range < threshold or _vix_open > vixUntradableThreshold
 
 loss_points_from_distance(float _distance) =>
-    _distance < lossDist1 ? lossPoints1 : _distance < lossDist2 ? lossPoints2 : lossPoints3
+    int started_dollars = int(math.ceil(math.max(_distance, syminfo.mintick)))
+    -math.min(maxLossPoints, started_dollars * lossPointsPerDollar)
+
+// Score categories: 1=untradable, 2=profit, 3=loss, 4=error (no breakout / cutoff)
+type SessionScore
+    int category
+    int points
+    string status
+
+// Pure outcome calculator — single source of truth for the points system.
+calc_session_score(bool _broke_high, bool _broke_low, bool _first_high, bool _first_low, float _close, float _orh, float _orl, float _open, float _vix_open, bool _cutoff_locked) =>
+    SessionScore score = SessionScore.new(4, 0, "Error Day")
+    if na(_orh) or na(_orl) or _orh == _orl or na(_open) or is_session_untradable(_orh, _orl, _open, _vix_open)
+        float or_range = na(_orh) or na(_orl) ? na : _orh - _orl
+        bool width_fail = na(_open) or na(or_range) ? true : or_range < _open * orWidthThresholdPct
+        string untradable_status = width_fail ? "Width Error" : na(_vix_open) ? "VIX Unavailable" : "VIX Untradable"
+        score := SessionScore.new(1, 0, untradable_status)
+    else if _broke_high or _broke_low
+        bool is_profit = breakout_is_profit(_broke_high, _broke_low, _first_high, _first_low, _close, _orh, _orl)
+        if is_profit
+            score := SessionScore.new(2, profitPoints, "Profit Day")
+        else
+            float loss_distance = loss_adverse_distance(_broke_high, _broke_low, _first_high, _first_low, _close, _orh, _orl)
+            score := SessionScore.new(3, loss_points_from_distance(loss_distance), "Loss Day")
+    else
+        score := SessionScore.new(4, 0, _cutoff_locked ? "Cutoff Day (No Breakout)" : "Error Day")
+    score
 
 points_label_text(int _points) =>
     (_points > 0 ? "+" : "") + str.tostring(_points) + " pts"
 
-create_points_label(int _bar_idx, float _price, int _points) =>
+create_points_label(int _time, float _price, int _points) =>
     color label_color = _points > 0 ? profitColor : _points < 0 ? lossColor : errorColor
-    label.new(_bar_idx, _price, text = points_label_text(_points), tooltip = "Points added/subtracted: " + points_label_text(_points), style = _points >= 0 ? label.style_label_up : label.style_label_down, color = label_color, textcolor = color.white, size = size.small)
+    label.new(_time, _price, xloc = xloc.bar_time, text = points_label_text(_points), tooltip = "Points added/subtracted: " + points_label_text(_points), style = _points >= 0 ? label.style_label_up : label.style_label_down, color = label_color, textcolor = color.white, size = size.small)
 
 delete_target(target _target, bool _delete_line) =>
     if _delete_line and not na(_target.ln)
@@ -230,6 +199,14 @@ var signals = array.new<label>()
 // Session state tracking
 var bool or_sesh = false
 var bool or_token = false
+var bool ltf_prev_in_or = false
+var bool ltf_prev_in_market = false
+var bool coverage_armed = false
+var bool session_eligible = false
+var bool session_finalized = false
+var int scoring_start_time = na
+var int last_ltf_time = na
+var int active_session_key = na
 
 // Opening Range values
 var float orh = na  // Opening Range High
@@ -237,7 +214,8 @@ var float orl = na  // Opening Range Low
 var float hst = na  // Highest since target
 var float lst = na  // Lowest since target
 var float prev_orm = na  // Previous Opening Range Middle
-var int or_start_idx = na
+var float session_market_close = na
+var int session_market_close_time = na
 
 // Target counters
 var int up_count = na
@@ -272,265 +250,229 @@ var bool first_breakout_high = false  // Tracks if first breakout was high
 var bool first_breakout_low = false   // Tracks if first breakout was low
 var bool breakout_cutoff_locked = false  // Prevents late breakouts after cutoff
 var float session_open_price = na
+var float session_vix_open = na
 var table stats_table = na
-var bool session_processed = false
 var bool is_tradable_day = false
-var bool is_vix_untradable_day = false
 var label day_outcome_label = na
-var bool width_error_shown = false
-var string current_session_status = "Pending"
 
 // CORE CALCULATIONS
 
-// Opening Range metrics
-float orm = math.avg(orh, orl)  // Opening Range Middle
-float orw = math.abs(orh - orl)  // Opening Range Width
-
-// Target source selection
-float h_src = tSrc == "Close" ? close : high
-float l_src = tSrc == "Close" ? close : low
 float vix_close = request.security("CBOE:VIX", timeframe.period, close, lookahead = barmerge.lookahead_off)
-float vix_open_daily = request.security("CBOE:VIX", "D", open, lookahead = barmerge.lookahead_off)
+[vix_daily_time, vix_open_daily] = request.security("CBOE:VIX", "D", [time, open], gaps = barmerge.gaps_off, lookahead = barmerge.lookahead_on)
 
-// Performance optimization
-max_bars_back(close, 500)
-max_bars_back(daily_broke_high, 100)
-max_bars_back(first_breakout_high, 100)
-max_bars_back(first_breakout_low, 100)
+// A single tuple request keeps one-minute processing within TradingView's request and
+// memory limits. All non-professional plans currently expose at most 100,000 intrabars.
+string intrabar_ticker = ticker.modify(syminfo.tickerid, session.extended)
+[ltf_times, ltf_time_closes, ltf_opens, ltf_highs, ltf_lows, ltf_closes, ltf_market_flags, ltf_custom_or_flags] = request.security_lower_tf(intrabar_ticker, "1", [time, time_close, open, high, low, close, not na(time("1", mktSesh, tz)), not na(time("1", crSesh, tz))], calc_bars_count = 100000)
 
-// SESSION DETECTION
+int market_start_minutes = session_start_minutes(mktSesh)
+int market_end_minutes = session_end_minutes(mktSesh)
+int market_duration_minutes = (market_end_minutes - market_start_minutes + 1440) % 1440
+market_duration_minutes := market_duration_minutes == 0 ? 1440 : market_duration_minutes
+int custom_or_start_minutes = session_start_minutes(crSesh)
+int custom_or_end_minutes = session_end_minutes(crSesh)
+int custom_or_duration_minutes = (custom_or_end_minutes - custom_or_start_minutes + 1440) % 1440
+custom_or_duration_minutes := custom_or_duration_minutes == 0 ? 1440 : custom_or_duration_minutes
+int custom_or_start_elapsed = (custom_or_start_minutes - market_start_minutes + 1440) % 1440
+int or_duration_minutes = math.max(1, int(timeframe.in_seconds(orTF) / 60))
+int cutoff_minutes = cutoffHour * 60 + cutoffMinute
+int cutoff_elapsed_minutes = (cutoff_minutes - market_start_minutes + 1440) % 1440
 
-bool new_tf = timeframe.change(orTF)
+if not crTog and or_duration_minutes > market_duration_minutes
+    runtime.error("Opening Range Period must not exceed Market Hours.")
 
-if crTog
-    or_sesh := not na(time(timeframe.period, crSesh, tz))
-else 
-    if session.isfirstbar
-        or_sesh := true
-    else if not session.isfirstbar and new_tf
-        or_sesh := false
+if crTog and (custom_or_start_elapsed >= market_duration_minutes or custom_or_start_elapsed + custom_or_duration_minutes > market_duration_minutes)
+    runtime.error("Custom Session must be fully contained within Market Hours.")
 
-bool or_start = or_sesh and not or_sesh[1]
-bool or_end = or_sesh[1] and not or_sesh
+if cutoff_elapsed_minutes > market_duration_minutes
+    runtime.error("Breakout cutoff must fall within Market Hours.")
 
-// Are we currently inside regular market hours?
-bool in_market_hours = not na(time(timeframe.period, mktSesh, tz))
-
-// Breakout cutoff time (uses selected timezone)
-int cutoff_ts = timestamp(tz, year, month, dayofmonth, cutoffHour, cutoffMinute)
-bool past_cutoff_time = time >= cutoff_ts
-
-// SESSION START PROCESSING
-
-if or_start
-    // Process previous session statistics
-    if not session_processed and or_token[1] and days_counted >= 0
-        days_counted += 1
-        
-        // Get previous session data
-        float prev_close = close[1]
-        float prev_orh = orh[1] 
-        float prev_orl = orl[1]
-        bool prev_broke_high = daily_broke_high[1]
-        bool prev_broke_low = daily_broke_low[1]
-        bool prev_first_high = first_breakout_high[1]
-        bool prev_first_low = first_breakout_low[1]
-        float prev_session_open = session_open_price[1]
-        int prev_session_points = 0
-        
-        // Validate previous session data
-        if not na(prev_orh) and not na(prev_orl) and prev_orh != prev_orl
-            if not na(prev_session_open)
-                bool prev_untradable = is_session_untradable(prev_orh, prev_orl, prev_session_open, vix_open_daily[1])
-                
-                if prev_untradable
-                    width_error_days += 1
-                else
-                    if prev_broke_high or prev_broke_low
-                        bool prev_is_profit = breakout_is_profit(prev_broke_high, prev_broke_low, prev_first_high, prev_first_low, prev_close, prev_orh, prev_orl)
-                        if prev_is_profit
-                            profit_days += 1
-                            prev_session_points := profitPoints
-                            total_points += prev_session_points
-                        else
-                            loss_days += 1
-                            float prev_loss_distance = loss_adverse_distance(prev_broke_high, prev_broke_low, prev_first_high, prev_first_low, prev_close, prev_orh, prev_orl)
-                            prev_session_points := loss_points_from_distance(prev_loss_distance)
-                            total_points += prev_session_points
-                    else
-                        error_days += 1
-                if showHist and prev_session_points != 0
-                    day_outcome_label := create_points_label(bar_index - 1, prev_close, prev_session_points)
-    
-    // Clean up previous session visuals
-    for targ in up_targs
-        delete_target(targ, not showHist)
-
-    for targ in down_targs
-        delete_target(targ, not showHist)
-
-    for lab in signals
-        if not showHist and not na(lab)
-            lab.delete()
-
-    if not showHist
-        if not na(or_bx)
-            or_bx.delete()
-        delete_target(h_ln, true)
-        delete_target(l_ln, true)
-        if not na(or_status_fill)
-            linefill.delete(or_status_fill)
-
-    if showHist
-        delete_target(h_ln, false)
-        delete_target(l_ln, false)
-    up_targs.clear()
-    down_targs.clear()
-    
-    if not na(day_outcome_label) and not showHist
-        day_outcome_label.delete()
-    day_outcome_label := na
-
-    // Reset status fill
-    or_status_fill := na
-    last_fill_color := na
-    or_start_idx := bar_index
-
-    // Initialize new session
-    orh := high
-    orl := low
-    prev_orm := orm[1]
-    up_count := 0
-    down_count := 0
-    up_check := true
-    down_check := true
-    
-    // Reset tracking variables
-    daily_broke_high := false
-    daily_broke_low := false
-    first_breakout_high := false
-    first_breakout_low := false
-    breakout_cutoff_locked := false
-    session_open_price := open
-    session_processed := false
-    is_tradable_day := false
-    is_vix_untradable_day := false
-    width_error_shown := false
-    current_session_status := "Pending"
-
-    or_bx := box.new(bar_index, high, bar_index, low, bgcolor = orFillColor, border_width = 0)
-    or_token := false
-
-// DURING SESSION PROCESSING
-
-if or_sesh
-    if high > orh
-        orh := high
-    if low < orl
-        orl := low
-    if not na(or_bx)
-        or_bx.set_top(orh)
-        or_bx.set_bottom(orl)
-        or_bx.set_right(bar_index)
-    if orh != orl
-        or_token := true
-        
-// SESSION END PROCESSING
-
-if or_end and or_token
-    h_ln := target.new(line.new(bar_index, orh, bar_index, orh, color = orColor), label.new(bar_index, orh, text = "ORH", tooltip = str.tostring(orh, format.mintick), style = label.style_label_left, color = invis, textcolor = color.new(orColor, 0), size = txtSize))
-    
-    l_ln := target.new(line.new(bar_index, orl, bar_index, orl, color = orColor), label.new(bar_index, orl, text = "ORL", tooltip = str.tostring(orl, format.mintick), style = label.style_label_left, color = invis, textcolor = color.new(orColor, 0), size = txtSize))
-    
-    hst := orh + (orw * tPer)
-    lst := orl - (orw * tPer)
-
-    day_dir := orm > prev_orm ? 1 : orm < prev_orm ? -1 : 0
-    
-    // Check tradability immediately after session
-    if not na(session_open_price) and not na(orh) and not na(orl)
-        is_vix_untradable_day := not na(vix_open_daily) and vix_open_daily > vixUntradableThreshold
-        is_tradable_day := not is_session_untradable(orh, orl, session_open_price, vix_open_daily)
-        
-        if not is_tradable_day and not width_error_shown
-            width_error_shown := true
-            float or_range = orh - orl
-            current_session_status := or_range < session_open_price * orWidthThresholdPct ? "Width Error" : "VIX Untradable"
-
-// BREAKOUT TRACKING
-
-if not or_sesh and or_token and not na(orh) and not na(orl) and is_tradable_day
-    // Lock the session once cutoff passes without a breakout
-    if not breakout_cutoff_locked and not daily_broke_high and not daily_broke_low and past_cutoff_time
-        breakout_cutoff_locked := true
-        current_session_status := "Cutoff (No Breakout)"
-
-    if not breakout_cutoff_locked
-        if close > orh and not daily_broke_high
-            daily_broke_high := true
-            if not first_breakout_high and not first_breakout_low
-                first_breakout_high := true
-            current_session_status := "Broke High"
-        if close < orl and not daily_broke_low
-            daily_broke_low := true
-            if not first_breakout_high and not first_breakout_low
-                first_breakout_low := true
-            current_session_status := "Broke Low"
-    
-    // Update status based on current situation
-    if breakout_cutoff_locked and not daily_broke_high and not daily_broke_low
-        current_session_status := "Cutoff (No Breakout)"
-    else if daily_broke_high and daily_broke_low
-        current_session_status := "Both Breakouts"
-    else if daily_broke_high
-        current_session_status := close >= orl ? "Potential Profit (High)" : "Potential Loss (High)"
-    else if daily_broke_low
-        current_session_status := close <= orh ? "Potential Profit (Low)" : "Potential Loss (Low)"
-    else if not daily_broke_high and not daily_broke_low
-        current_session_status := "No Breakout Yet"
-
-// Breakout edge detection (first bar close beyond ORH/ORL)
-bool broke_high_this_bar = not daily_broke_high[1] and daily_broke_high
-bool broke_low_this_bar = not daily_broke_low[1] and daily_broke_low
+bool broke_high_this_bar = false
+bool broke_low_this_bar = false
 bool confirmed_bar = barstate.isconfirmed
 
-// Final session processing
-if session.islastbar and or_token and not session_processed and is_tradable_day
-    if not daily_broke_high and not daily_broke_low
-        current_session_status := breakout_cutoff_locked ? "Cutoff Day (No Breakout)" : "Error Day (No Breakout)"
+int intrabar_count = array.size(ltf_times)
+if intrabar_count > 0
+    for i = 0 to intrabar_count - 1
+        int ltf_time = array.get(ltf_times, i)
+        int ltf_time_close = array.get(ltf_time_closes, i)
+        if na(ltf_time_close) or ltf_time_close > timenow
+            continue
+        float ltf_open = array.get(ltf_opens, i)
+        float ltf_high = array.get(ltf_highs, i)
+        float ltf_low = array.get(ltf_lows, i)
+        float ltf_close = array.get(ltf_closes, i)
+        bool ltf_in_market = array.get(ltf_market_flags, i)
+        bool ltf_in_custom_or = array.get(ltf_custom_or_flags, i)
+        int minute_of_day = hour(ltf_time, tz) * 60 + minute(ltf_time, tz)
+        int close_minute_of_day = hour(ltf_time_close, tz) * 60 + minute(ltf_time_close, tz)
+        int minutes_from_market_open = (minute_of_day - market_start_minutes + 1440) % 1440
+        bool ltf_in_default_or = ltf_in_market and minutes_from_market_open < or_duration_minutes
+        bool ltf_in_or = crTog ? ltf_in_custom_or : ltf_in_default_or
+        int expected_or_start = crTog ? custom_or_start_minutes : market_start_minutes
+        int ltf_calendar_key = year(ltf_time, tz) * 10000 + month(ltf_time, tz) * 100 + dayofmonth(ltf_time, tz)
+        bool market_is_overnight = market_end_minutes <= market_start_minutes
+        int session_anchor_time = market_is_overnight and minute_of_day < market_end_minutes ? ltf_time - 86400000 : ltf_time
+        int ltf_session_key = year(session_anchor_time, tz) * 10000 + month(session_anchor_time, tz) * 100 + dayofmonth(session_anchor_time, tz)
 
-if barstate.islast and or_token and not session_processed
-    days_counted += 1
-    session_processed := true
-    int session_points = 0
-    
-    if not na(session_open_price) and not na(orh) and not na(orl)
-        is_vix_untradable_day := not na(vix_open_daily) and vix_open_daily > vixUntradableThreshold
-        
-        if is_session_untradable(orh, orl, session_open_price, vix_open_daily)
-            width_error_days += 1
-            float or_range = orh - orl
-            current_session_status := or_range < session_open_price * orWidthThresholdPct ? "Width Error" : "VIX Untradable"
+        // Requiring either the configured start minute or prior out-of-OR coverage
+        // prevents the oldest, partially available session from entering statistics.
+        bool ltf_or_start = ltf_in_or and not ltf_prev_in_or and (coverage_armed or minute_of_day == expected_or_start)
+        bool ltf_or_end = not ltf_in_or and ltf_prev_in_or and session_eligible
 
-        else
-            if daily_broke_high or daily_broke_low
-                bool is_profit = breakout_is_profit(daily_broke_high, daily_broke_low, first_breakout_high, first_breakout_low, close, orh, orl)
-                if is_profit
+        if ltf_or_start
+            // Remove any active-session preview label before finalizing it.
+            if not na(day_outcome_label)
+                day_outcome_label.delete()
+                day_outcome_label := na
+
+            // Finalized counters contain completed sessions only. The stored final
+            // close is always the last confirmed one-minute close in Market Hours.
+            if session_eligible and not session_finalized and or_token and not na(session_market_close)
+                SessionScore final_score = calc_session_score(daily_broke_high, daily_broke_low, first_breakout_high, first_breakout_low, session_market_close, orh, orl, session_open_price, session_vix_open, breakout_cutoff_locked)
+                days_counted += 1
+                if final_score.category == 1
+                    width_error_days += 1
+                else if final_score.category == 2
                     profit_days += 1
-                    session_points := profitPoints
-                    total_points += session_points
-                    current_session_status := "Profit Day"
-                else
+                    total_points += final_score.points
+                else if final_score.category == 3
                     loss_days += 1
-                    float loss_distance = loss_adverse_distance(daily_broke_high, daily_broke_low, first_breakout_high, first_breakout_low, close, orh, orl)
-                    session_points := loss_points_from_distance(loss_distance)
-                    total_points += session_points
-                    current_session_status := "Loss Day"
+                    total_points += final_score.points
+                else
+                    error_days += 1
+                if showHist and final_score.points != 0
+                    create_points_label(session_market_close_time, session_market_close, final_score.points)
+                session_finalized := true
+
+            // Clean up the previous session's visual references.
+            for targ in up_targs
+                delete_target(targ, not showHist)
+            for targ in down_targs
+                delete_target(targ, not showHist)
+            for lab in signals
+                if not showHist and not na(lab)
+                    lab.delete()
+            if not showHist
+                if not na(or_bx)
+                    or_bx.delete()
+                delete_target(h_ln, true)
+                delete_target(l_ln, true)
+                if not na(or_status_fill)
+                    linefill.delete(or_status_fill)
             else
-                error_days += 1
-                current_session_status := breakout_cutoff_locked ? "Cutoff Day (No Breakout)" : "Error Day"
-        if session_points != 0
-            day_outcome_label := create_points_label(bar_index, close, session_points)
+                delete_target(h_ln, false)
+                delete_target(l_ln, false)
+            up_targs.clear()
+            down_targs.clear()
+            signals.clear()
+
+            prev_orm := not na(orh) and not na(orl) ? math.avg(orh, orl) : prev_orm
+            or_status_fill := na
+            last_fill_color := na
+            orh := ltf_high
+            orl := ltf_low
+            hst := na
+            lst := na
+            up_count := 0
+            down_count := 0
+            up_check := true
+            down_check := true
+            daily_broke_high := false
+            daily_broke_low := false
+            first_breakout_high := false
+            first_breakout_low := false
+            breakout_cutoff_locked := false
+            session_open_price := ltf_open
+            int vix_calendar_key = na(vix_daily_time) ? na : year(vix_daily_time, tz) * 10000 + month(vix_daily_time, tz) * 100 + dayofmonth(vix_daily_time, tz)
+            session_vix_open := not na(vix_open_daily) and vix_calendar_key == ltf_calendar_key and ltf_time >= vix_daily_time ? vix_open_daily : na
+            session_market_close := na
+            session_market_close_time := na
+            active_session_key := ltf_session_key
+            session_finalized := false
+            is_tradable_day := false
+            or_token := true
+            session_eligible := true
+            if na(scoring_start_time)
+                scoring_start_time := ltf_time
+            or_bx := box.new(bar_index, ltf_high, bar_index, ltf_low, bgcolor = orFillColor, border_width = 0)
+
+        if ltf_in_or and session_eligible and ltf_session_key == active_session_key
+            orh := na(orh) ? ltf_high : math.max(orh, ltf_high)
+            orl := na(orl) ? ltf_low : math.min(orl, ltf_low)
+            if not na(or_bx)
+                or_bx.set_top(orh)
+                or_bx.set_bottom(orl)
+                or_bx.set_right(bar_index)
+
+        if ltf_or_end and or_token
+            float completed_or_width = math.abs(orh - orl)
+            float completed_or_mid = math.avg(orh, orl)
+            h_ln := target.new(line.new(bar_index, orh, bar_index, orh, color = orColor), label.new(bar_index, orh, text = "ORH", tooltip = str.tostring(orh, format.mintick), style = label.style_label_left, color = invis, textcolor = color.new(orColor, 0), size = txtSize))
+            l_ln := target.new(line.new(bar_index, orl, bar_index, orl, color = orColor), label.new(bar_index, orl, text = "ORL", tooltip = str.tostring(orl, format.mintick), style = label.style_label_left, color = invis, textcolor = color.new(orColor, 0), size = txtSize))
+            hst := orh + completed_or_width * tPer
+            lst := orl - completed_or_width * tPer
+            day_dir := na(prev_orm) ? 0 : completed_or_mid > prev_orm ? 1 : completed_or_mid < prev_orm ? -1 : 0
+            is_tradable_day := not is_session_untradable(orh, orl, session_open_price, session_vix_open)
+
+        // A custom OR can start after market open. The date key prevents those
+        // pre-OR bars from overwriting the prior session's stored final close.
+        if ltf_in_market and session_eligible and ltf_session_key == active_session_key
+            session_market_close := ltf_close
+            session_market_close_time := ltf_time_close
+
+            if not ltf_in_or and or_token and is_tradable_day
+                bool past_cutoff_time = minutes_from_market_open >= cutoff_elapsed_minutes
+                if not breakout_cutoff_locked and not daily_broke_high and not daily_broke_low and past_cutoff_time
+                    breakout_cutoff_locked := true
+
+                if not breakout_cutoff_locked
+                    if ltf_close > orh and not daily_broke_high
+                        daily_broke_high := true
+                        broke_high_this_bar := true
+                        if not first_breakout_high and not first_breakout_low
+                            first_breakout_high := true
+                    if ltf_close < orl and not daily_broke_low
+                        daily_broke_low := true
+                        broke_low_this_bar := true
+                        if not first_breakout_high and not first_breakout_low
+                            first_breakout_low := true
+
+            // Finalize immediately on the configured market close. This works on
+            // regular-session charts where no out-of-session bar follows.
+            if close_minute_of_day == market_end_minutes and not session_finalized and or_token
+                if not na(day_outcome_label)
+                    day_outcome_label.delete()
+                    day_outcome_label := na
+                SessionScore close_score = calc_session_score(daily_broke_high, daily_broke_low, first_breakout_high, first_breakout_low, session_market_close, orh, orl, session_open_price, session_vix_open, breakout_cutoff_locked)
+                days_counted += 1
+                if close_score.category == 1
+                    width_error_days += 1
+                else if close_score.category == 2
+                    profit_days += 1
+                    total_points += close_score.points
+                else if close_score.category == 3
+                    loss_days += 1
+                    total_points += close_score.points
+                else
+                    error_days += 1
+                if showHist and close_score.points != 0
+                    create_points_label(session_market_close_time, session_market_close, close_score.points)
+                session_finalized := true
+
+        coverage_armed := coverage_armed or not ltf_in_or
+        ltf_prev_in_or := ltf_in_or
+        ltf_prev_in_market := ltf_in_market
+        last_ltf_time := ltf_time
+
+or_sesh := ltf_prev_in_or
+bool in_market_hours = ltf_prev_in_market
+
+// Opening-range metrics and target sources use exact one-minute OR values.
+float orm = math.avg(orh, orl)
+float orw = math.abs(orh - orl)
+float h_src = tSrc == "Close" ? close : high
+float l_src = tSrc == "Close" ? close : low
 
 // LEVEL EXTENSIONS
 
@@ -550,11 +492,12 @@ if not or_sesh and or_token
 if not or_sesh and or_token
     if not na(session_open_price) and not na(orh) and not na(orl) and not na(h_ln.ln) and not na(l_ln.ln)
         color session_fill_color = color(na)
-        if is_session_untradable(orh, orl, session_open_price, vix_open_daily)
+        if is_session_untradable(orh, orl, session_open_price, session_vix_open)
             session_fill_color := color.new(widthErrorColor, 85)
         else if is_tradable_day
             if daily_broke_high or daily_broke_low
-                bool is_profit = breakout_is_profit(daily_broke_high, daily_broke_low, first_breakout_high, first_breakout_low, close, orh, orl)
+                float outcome_close = na(session_market_close) ? close : session_market_close
+                bool is_profit = breakout_is_profit(daily_broke_high, daily_broke_low, first_breakout_high, first_breakout_low, outcome_close, orh, orl)
                 session_fill_color := color.new(is_profit ? profitColor : lossColor, 85)
             else if breakout_cutoff_locked
                 session_fill_color := color.new(widthErrorColor, 85)
@@ -585,11 +528,10 @@ int down_cur = valid_orw ? math.max(0, get_1up((orl - l_src) / (orw * tPer))) : 
 
 if not breakout_cutoff_locked and is_tradable_day
     if not useBias
-        if confirmed_bar
-            if broke_high_this_bar
-                up_signal := true
-            if broke_low_this_bar
-                down_signal := true
+        if broke_high_this_bar
+            up_signal := true
+        if broke_low_this_bar
+            down_signal := true
     else
         if close > orm and down_check == false
             down_check := true
@@ -613,50 +555,61 @@ if not breakout_cutoff_locked and is_tradable_day
 // can reference ORH/ORL in the alert dialog, unlike the visual line objects above.
 float alertable_orh = not or_sesh and or_token and not na(orh) ? orh : na
 float alertable_orl = not or_sesh and or_token and not na(orl) ? orl : na
-bool alert_broke_high = confirmed_bar and broke_high_this_bar and is_tradable_day and not breakout_cutoff_locked
-bool alert_broke_low = confirmed_bar and broke_low_this_bar and is_tradable_day and not breakout_cutoff_locked
+bool alert_broke_high = broke_high_this_bar and is_tradable_day and not breakout_cutoff_locked
+bool alert_broke_low = broke_low_this_bar and is_tradable_day and not breakout_cutoff_locked
 
 alertcondition(alert_broke_high, title = "ORB High Breakout", message = "ORB High Breakout on {{exchange}}:{{ticker}} at {{close}} ({{interval}})")
 alertcondition(alert_broke_low, title = "ORB Low Breakout", message = "ORB Low Breakout on {{exchange}}:{{ticker}} at {{close}} ({{interval}})")
 alertcondition(alert_broke_high or alert_broke_low, title = "Any ORB Breakout", message = "ORB Breakout on {{exchange}}:{{ticker}} at {{close}} ({{interval}})")
 
-// SESSION TREND INDICATORS
-
-float session_sma = showSMA ? day_ma(or_start, "SMA", close, smaLen) : na
-float session_ema = showEMA ? day_ma(or_start, "EMA", close, emaLen) : na
-float session_rma = showRMA ? day_ma(or_start, "RMA", close, rmaLen) : na
-float session_wma = showWMA ? day_ma(or_start, "WMA", close, wmaLen) : na
-
-// Session Anchor VWAP calculation
-float session_anchor_vwap_val = showVWAP ? session_anchor_vwap(or_start) : na
-
 // DISPLAY & VISUALIZATION
 
 // Market close countdown and VIX snapshot
 int mc_minutes_total = session_end_minutes(mktSesh)
-int mc_hour = na(mc_minutes_total) ? na : mc_minutes_total / 60
+int mc_hour = na(mc_minutes_total) ? na : int(mc_minutes_total / 60)
 int mc_minute = na(mc_minutes_total) ? na : mc_minutes_total % 60
-int market_close_ts = not na(mc_hour) and not na(mc_minute) ? timestamp(tz, year, month, dayofmonth, mc_hour, mc_minute) : na
+int countdown_reference_time = na(last_ltf_time) ? time : last_ltf_time
+int market_close_ts = not na(mc_hour) and not na(mc_minute) ? timestamp(tz, year(countdown_reference_time, tz), month(countdown_reference_time, tz), dayofmonth(countdown_reference_time, tz), mc_hour, mc_minute) : na
 float ms_to_close = not na(market_close_ts) ? (market_close_ts - timenow) : na
 int mins_to_close = not na(ms_to_close) ? int(math.max(0, math.floor(ms_to_close / 60000))) : na
 string market_close_countdown = not na(mins_to_close) and mins_to_close > 0 ? fmt_hhmm(mins_to_close) : "Closed"
 
 string vix_display = na(vix_close) ? "N/A" : str.tostring(vix_close, "#.##")
-color vix_bg = na(vix_close) ? color.rgb(30,34,45) : ((not na(vix_open_daily) and vix_open_daily > vixUntradableThreshold) ? color.new(widthErrorColor, 70) : color.new(color.green, 70))
+color vix_bg = na(session_vix_open) ? color.new(widthErrorColor, 70) : (session_vix_open > vixUntradableThreshold ? color.new(widthErrorColor, 70) : color.new(color.green, 70))
 
 float or_width_pct = not na(session_open_price) and not na(orh) and not na(orl) ? math.abs(orh - orl) / session_open_price * 100 : na
 color width_bg = na(or_width_pct) ? color.rgb(30,34,45) : (or_width_pct >= (orWidthThresholdPct * 100) ? color.new(color.green, 70) : color.new(widthErrorColor, 70))
 
+// The active session is previewed without mutating finalized counters.
+bool active_outcome_ready = not is_tradable_day or daily_broke_high or daily_broke_low or breakout_cutoff_locked
+bool has_active_score = session_eligible and not session_finalized and or_token and not or_sesh and not na(session_market_close) and active_outcome_ready
+SessionScore active_score = SessionScore.new(0, 0, "Pending")
+if has_active_score
+    active_score := calc_session_score(daily_broke_high, daily_broke_low, first_breakout_high, first_breakout_low, session_market_close, orh, orl, session_open_price, session_vix_open, breakout_cutoff_locked)
+
+if barstate.islast
+    if not na(day_outcome_label)
+        day_outcome_label.delete()
+        day_outcome_label := na
+    if has_active_score
+        if active_score.points != 0
+            day_outcome_label := create_points_label(session_market_close_time, session_market_close, active_score.points)
+
 // Statistics Table (configurable location/size, horizontal layout)
-if barstate.islast and barstate.isconfirmed and showTable
+if barstate.islast and showTable
     if not na(stats_table)
         table.delete(stats_table)
 
-    int tradable_days = profit_days + loss_days + error_days
-    float profit_rate = tradable_days > 0 ? math.round((profit_days / tradable_days) * 100, 2) : 0.0
-    float loss_rate = tradable_days > 0 ? math.round((loss_days / tradable_days) * 100, 2) : 0.0
-    float error_rate = tradable_days > 0 ? math.round((error_days / tradable_days) * 100, 2) : 0.0
-    bool is_current_session = or_token and not session_processed
+    int display_sessions = days_counted + (has_active_score ? 1 : 0)
+    int display_profit_days = profit_days + (has_active_score and active_score.category == 2 ? 1 : 0)
+    int display_loss_days = loss_days + (has_active_score and active_score.category == 3 ? 1 : 0)
+    int display_error_days = error_days + (has_active_score and active_score.category == 4 ? 1 : 0)
+    int display_untradable_days = width_error_days + (has_active_score and active_score.category == 1 ? 1 : 0)
+    int display_total_points = total_points + (has_active_score ? active_score.points : 0)
+    int tradable_days = display_profit_days + display_loss_days + display_error_days
+    float profit_rate = tradable_days > 0 ? math.round((display_profit_days / tradable_days) * 100, 2) : 0.0
+    float loss_rate = tradable_days > 0 ? math.round((display_loss_days / tradable_days) * 100, 2) : 0.0
+    float error_rate = tradable_days > 0 ? math.round((display_error_days / tradable_days) * 100, 2) : 0.0
 
     var table_pos = position.top_right
     if tableLocation == "Bottom Right"
@@ -675,7 +628,7 @@ if barstate.islast and barstate.isconfirmed and showTable
 
     int num_cols = 0
     if showBacktestColumns
-        num_cols += 6
+        num_cols += 7
     if showWidthPctColumn
         num_cols += 1
     if showMarketCloseColumn
@@ -692,28 +645,33 @@ if barstate.islast and barstate.isconfirmed and showTable
 
         if showBacktestColumns
             table.cell(stats_table, col_idx, 0, "Sessions", text_color = color.white, text_size = mappedSize, bgcolor = color.rgb(30,34,45))
-            table.cell(stats_table, col_idx, 1, str.tostring(days_counted + (is_current_session ? 1 : 0)), text_color = color.white, text_size = mappedSize, bgcolor = color.rgb(30,34,45))
+            table.cell(stats_table, col_idx, 1, str.tostring(display_sessions), text_color = color.white, text_size = mappedSize, bgcolor = color.rgb(30,34,45))
             col_idx += 1
 
             table.cell(stats_table, col_idx, 0, "Profit", text_color = color.white, text_size = mappedSize, bgcolor = color.rgb(30,34,45))
-            table.cell(stats_table, col_idx, 1, str.tostring(profit_days) + " (" + str.tostring(profit_rate, "#.##") + "%)", text_color = color.white, text_size = mappedSize, bgcolor = color.rgb(30,34,45))
+            table.cell(stats_table, col_idx, 1, str.tostring(display_profit_days) + " (" + str.tostring(profit_rate, "#.##") + "%)", text_color = color.white, text_size = mappedSize, bgcolor = color.rgb(30,34,45))
             col_idx += 1
 
             table.cell(stats_table, col_idx, 0, "Loss", text_color = color.white, text_size = mappedSize, bgcolor = color.rgb(30,34,45))
-            table.cell(stats_table, col_idx, 1, str.tostring(loss_days) + " (" + str.tostring(loss_rate, "#.##") + "%)", text_color = color.white, text_size = mappedSize, bgcolor = color.rgb(30,34,45))
+            table.cell(stats_table, col_idx, 1, str.tostring(display_loss_days) + " (" + str.tostring(loss_rate, "#.##") + "%)", text_color = color.white, text_size = mappedSize, bgcolor = color.rgb(30,34,45))
             col_idx += 1
 
             table.cell(stats_table, col_idx, 0, "Error", text_color = color.white, text_size = mappedSize, bgcolor = color.rgb(30,34,45))
-            table.cell(stats_table, col_idx, 1, str.tostring(error_days) + " (" + str.tostring(error_rate, "#.##") + "%)", text_color = color.white, text_size = mappedSize, bgcolor = color.rgb(30,34,45))
+            table.cell(stats_table, col_idx, 1, str.tostring(display_error_days) + " (" + str.tostring(error_rate, "#.##") + "%)", text_color = color.white, text_size = mappedSize, bgcolor = color.rgb(30,34,45))
             col_idx += 1
 
             table.cell(stats_table, col_idx, 0, "Untradable", text_color = color.white, text_size = mappedSize, bgcolor = color.rgb(30,34,45))
-            table.cell(stats_table, col_idx, 1, str.tostring(width_error_days), text_color = color.white, text_size = mappedSize, bgcolor = color.rgb(30,34,45))
+            table.cell(stats_table, col_idx, 1, str.tostring(display_untradable_days), text_color = color.white, text_size = mappedSize, bgcolor = color.rgb(30,34,45))
             col_idx += 1
 
-            color points_bg = total_points > 0 ? color.new(color.green, 70) : total_points < 0 ? color.new(color.red, 70) : color.rgb(30,34,45)
+            color points_bg = display_total_points > 0 ? color.new(color.green, 70) : display_total_points < 0 ? color.new(color.red, 70) : color.rgb(30,34,45)
             table.cell(stats_table, col_idx, 0, "Points", text_color = color.white, text_size = mappedSize, bgcolor = color.rgb(30,34,45))
-            table.cell(stats_table, col_idx, 1, str.tostring(total_points), text_color = color.white, text_size = mappedSize, bgcolor = points_bg)
+            table.cell(stats_table, col_idx, 1, str.tostring(display_total_points), text_color = color.white, text_size = mappedSize, bgcolor = points_bg)
+            col_idx += 1
+
+            string coverage_text = na(scoring_start_time) ? "N/A" : str.format_time(scoring_start_time, "yyyy-MM-dd", tz)
+            table.cell(stats_table, col_idx, 0, "1m From", text_color = color.white, text_size = mappedSize, bgcolor = color.rgb(30,34,45))
+            table.cell(stats_table, col_idx, 1, coverage_text, text_color = color.white, text_size = mappedSize, bgcolor = color.rgb(30,34,45))
             col_idx += 1
 
         if showWidthPctColumn
@@ -741,16 +699,9 @@ if barstate.islast and barstate.isconfirmed and showTable
             table.cell(stats_table, col_idx, 1, str.tostring(orl, format.mintick), text_color = color.white, text_size = mappedSize, bgcolor = color.rgb(30,34,45))
 
 
-// Trend Indicator Plots
+// Hidden plots expose exact one-minute OR levels to TradingView alerts.
 plot(alertable_orh, "Opening Range High (ORH)", color=orColor, linewidth=1, display=display.none)
 plot(alertable_orl, "Opening Range Low (ORL)", color=orColor, linewidth=1, display=display.none)
-plot(or_start ? na : session_sma, "Session SMA", color=showSMA ? smaColor : na, linewidth=2)
-plot(or_start ? na : session_ema, "Session EMA", color=showEMA ? emaColor : na, linewidth=2)
-plot(or_start ? na : session_rma, "Session RMA", color=showRMA ? rmaColor : na, linewidth=2)
-plot(or_start ? na : session_wma, "Session WMA", color=showWMA ? wmaColor : na, linewidth=2)
-
-// Session Anchor VWAP plot
-plot(or_start ? na : session_anchor_vwap_val, "Session Anchor VWAP", color=showVWAP ? vwapColor : na, linewidth=2)
 
 // Target Generation - only show targets when price closes outside opening range
 if not or_sesh and or_token
