@@ -8,6 +8,8 @@ Larry Williams VixFix Indicator is a TradingView Pine Script indicator based on 
 
 The [Larry Williams VixFix](https://www.tradingview.com/script/TXPkMxfZ-Larry-Williams-VixFix/) indicator measures price deviations from recent highs and lows over multiple timeframes to identify potential reversal points, especially for a broad market index like SPY. Used in conjunction with VIX reading and the super trend indicator, it can quite accurately pin market bottoms **(does not apply for market top).**
 
+A personal overlay that plots VIX on the same pane lives in [`custom/VixFix with VIX`](../custom/VixFix%20with%20VIX).
+
 ## 📚 Table of Contents
 
 - [📋 Overview](#-overview)

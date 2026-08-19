@@ -10,8 +10,8 @@ Collection of custom TradingView Pine Script™ indicators and strategies for te
   - [📊 Available Indicators](#-available-indicators)
     - [All Moving Averages](#all-moving-averages)
     - [Opening Range Breakout (ORB)](#opening-range-breakout-orb)
-    - [Custom VIX](#custom-vix)
     - [Larry Williams VixFix](#larry-williams-vixfix)
+  - [🧩 Custom Scripts](#-custom-scripts)
   - [🚀 Installation](#-installation)
   - [⚠️ Important Notes](#️-important-notes)
   - [📄 License](#-license)
@@ -21,6 +21,10 @@ Collection of custom TradingView Pine Script™ indicators and strategies for te
 ## 📋 Overview
 
 Each indicator is made to solve gaps that I have identified in my workflow.
+
+Published indicators live in their own folders with the original script and README. Personal customisations — overlays and combinations built for a specific chart setup — live in [`custom/`](custom/).
+
+
 
 ## 📊 Available Indicators
 
@@ -51,17 +55,6 @@ Identifies and tracks opening range breakouts with customisable duration, advanc
 
 
 
-### Custom VIX
-
-- **Script:** [`custom-vix-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/Custom-Vix/custom-vix-indicator-script)
-- **Description:**
-Plots daily VIX close in a separate pane and highlights periods when VIX exceeds a configurable threshold.
-  - Daily VIX series with adjustable symbol (default: CBOE:VIX)
-  - Configurable threshold line with pane shading above the level
-  - Adjustable shade opacity for readability
-
-
-
 ### Larry Williams VixFix
 
 - **Script:** [`larry-williams-vixfix-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/Larry%20Williams%20VixFix/larry-williams-vixfix-indicator-script)
@@ -71,6 +64,16 @@ An implementation of the Larry Williams VixFix indicator for identifying market 
   - Dynamic background colouring with intensity-based visual feedback
   - Statistical analysis with performance tracking
   - Mobile-friendly table display options
+
+
+
+## 🧩 Custom Scripts
+
+Personal workflow customisations are in [`custom/`](custom/). They are not the canonical indicator scripts.
+
+- **[Custom VIX](custom/Custom-Vix):** Daily VIX close with a configurable threshold highlight
+- **[Supertrend Custom](custom/Supertrend%20Custom):** SuperTrend with SMA overlay and green/red time-percentage table
+- **[VixFix with VIX](custom/VixFix%20with%20VIX):** VixFix plus a CBOE VIX overlay for a combined pane
 
 
 
