@@ -1,6 +1,8 @@
 // This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// Citation Weinstein, S. (1988). Secrets for Profiting in Bull and Bear Markets. Dow Jones-Irwin.
+// Citation The Professional Tape Reader newsletter (1972–2000).
 // Adapted from TrendSpider "Weinstein Stage Analysis" (https://charts.trendspider.com/shared/679813ca6550e0000970233f)
-// Source https://github.com/joveteo/trading-view-scripts/tree/main/Weinstein%20Stage%20Analysis/weinstein-stage-analysis-indicator-script
+// Source https://github.com/joveteo/trading-view-scripts/tree/main/Weinstein%20Stage%20Analysis/weinstein-stage-analysis
 // © iLanat8
 //@version=6
 indicator("Weinstein Stage Analysis", shorttitle = "Weinstein Stages", overlay = true, behind_chart = false, max_labels_count = 500)

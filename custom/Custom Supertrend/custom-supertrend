@@ -1,5 +1,8 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// Source https://github.com/joveteo/trading-view-scripts/tree/main/custom/Custom%20Supertrend/custom-supertrend
+// © iLanat8
 //@version=6
-indicator("SuperTrend with Green/Red %", overlay=true, max_bars_back=5000)
+indicator("Custom Supertrend", overlay=true, max_bars_back=5000)
 
 // ── Inputs ──────────────────────────────────────────────────────────────────
 atrPeriod   = input.int(10, "ATR Period", minval=1)

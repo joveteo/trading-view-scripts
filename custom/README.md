@@ -1,30 +1,25 @@
-# Custom Scripts
+# Custom
 
-Personal workflow customisations. These combine or extend published indicators for a specific chart setup and are not the canonical versions.
+Personal customisations of published methods. Each folder has a script and a readme that states what was changed from the usual implementation.
 
-Published indicators stay in their own top-level folders. Variants that only exist for a personal overlay or filter belong here.
+See [Installation](../README.md#installation) and [License](../README.md#license) in the repository readme. The legal disclaimer is in [DISCLAIMER.md](../DISCLAIMER.md).
 
 ## Scripts
 
-### Custom VIX
+### [Custom Orb](Custom%20Orb/README.md)
 
-- **Script:** [`custom-vix-indicator-script`](Custom-Vix/custom-vix-indicator-script)
-- **Description:** Plots daily VIX close in a separate pane and highlights periods when VIX exceeds a configurable threshold.
+- **Script:** [`custom-orb`](Custom%20Orb/custom-orb)
 
-### Supertrend Custom
+Opening range breakout scored from confirmed one-minute bars, with VIX and width filters, a points table, and optional daily-bias arrows.
 
-- **Script:** [`supertrend_custom_script`](Supertrend%20Custom/supertrend_custom_script)
-- **Description:** SuperTrend with an SMA overlay and a green/red time-percentage table.
+### [Custom Supertrend](Custom%20Supertrend/README.md)
 
-### VixFix with VIX
+- **Script:** [`custom-supertrend`](Custom%20Supertrend/custom-supertrend)
 
-- **Script:** [`larry-williams-vixfix-with-vix-indicator-script`](VixFix%20with%20VIX/larry-williams-vixfix-with-vix-indicator-script)
-- **Description:** Larry Williams VixFix with a CBOE VIX overlay, threshold highlight, and optional buy/sell signal toggles. The original VixFix (without VIX) is in [`Larry Williams VixFix`](../Larry%20Williams%20VixFix).
+SuperTrend with an SMA overlay and a table of time spent in green versus red.
 
-## 🚀 Installation
+### [Custom Vix](Custom%20Vix/README.md)
 
-1. Open TradingView and navigate to the Pine Editor
-2. Copy the contents of the script file
-3. Paste into the Pine Editor
-4. Click "Add to Chart"
-5. Configure your preferred settings in the indicator inputs
+- **Script:** [`custom-vix`](Custom%20Vix/custom-vix)
+
+Daily VIX close in its own pane, shaded when VIX is above a chosen threshold.
