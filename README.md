@@ -11,6 +11,7 @@ Collection of custom TradingView Pine Script™ indicators and strategies for te
     - [All Moving Averages](#all-moving-averages)
     - [Opening Range Breakout (ORB)](#opening-range-breakout-orb)
     - [Larry Williams VixFix](#larry-williams-vixfix)
+    - [Weinstein Stage Analysis](#weinstein-stage-analysis)
   - [🧩 Custom Scripts](#-custom-scripts)
   - [🚀 Installation](#-installation)
   - [⚠️ Important Notes](#️-important-notes)
@@ -64,6 +65,18 @@ An implementation of the Larry Williams VixFix indicator for identifying market 
   - Dynamic background colouring with intensity-based visual feedback
   - Statistical analysis with performance tracking
   - Mobile-friendly table display options
+
+
+
+### Weinstein Stage Analysis
+
+- **Script:** [`weinstein-stage-analysis-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/Weinstein%20Stage%20Analysis/weinstein-stage-analysis-indicator-script)
+- **Description:**
+Maps Stan Weinstein’s four-stage cycle onto the chart by recolouring the candles themselves, adapted from the [TrendSpider Weinstein Stage Analysis](https://charts.trendspider.com/shared/679813ca6550e0000970233f) implementation.
+  - Stages calculated on a higher timeframe (weekly by default) using a 30-period moving average
+  - Entire bar colour (body, border, and wick) changes by stage instead of overlaying candles
+  - Configurable MA type, proximity band, and stage colours
+  - Optional stage-change labels and alerts for Stages 1–4
 
 
 

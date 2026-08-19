@@ -1,0 +1,104 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// Adapted from TrendSpider "Weinstein Stage Analysis" (https://charts.trendspider.com/shared/679813ca6550e0000970233f)
+// Source https://github.com/joveteo/trading-view-scripts/tree/main/Weinstein%20Stage%20Analysis/weinstein-stage-analysis-indicator-script
+// © iLanat8
+//@version=6
+indicator("Weinstein Stage Analysis", shorttitle = "Weinstein Stages", overlay = true, max_labels_count = 500)
+
+// =============================================================================
+// INPUTS
+// =============================================================================
+
+string htf = input.timeframe("W", "Stage Timeframe", group = "Moving Average", tooltip = "Weinstein analysis is calculated on this timeframe and mapped onto the chart. Weekly is the classic setting.")
+int maLength = input.int(30, "MA Length", minval = 1, group = "Moving Average", tooltip = "Lookback for the stage moving average. Weinstein's original method uses a 30-week SMA.")
+string maType = input.string("SMA", "MA Type", options = ["SMA", "EMA", "WMA", "RMA", "VWMA", "HMA"], group = "Moving Average", tooltip = "Moving average type used for stage detection.")
+float withinRangePercent = input.float(5.0, "Within Range %", minval = 0.0, maxval = 25.0, step = 0.5, group = "Moving Average", tooltip = "Percentage band around the MA. Stage 2 requires the candle body above MA + this band; Stage 4 requires the body below MA − this band.")
+
+color stage1Color = input.color(#90EE90, "Stage 1 Color", group = "Stage Colours", tooltip = "Basing / accumulation after a decline. Price is no longer confirmed in Stage 4.")
+color stage2Color = input.color(#008000, "Stage 2 Color", group = "Stage Colours", tooltip = "Advancing trend. Candle body is above a rising MA by more than the range band.")
+color stage3Color = input.color(#FFA500, "Stage 3 Color", group = "Stage Colours", tooltip = "Distribution / topping after Stage 2, until a Stage 4 breakdown.")
+color stage4Color = input.color(#FF0000, "Stage 4 Color", group = "Stage Colours", tooltip = "Declining trend. Candle body is below a falling MA by more than the range band.")
+
+bool colorBars = input.bool(true, "Colour Bars", group = "Display", tooltip = "Recolour the chart candles themselves by stage. Disable to keep the original candle colours.")
+bool showMa = input.bool(true, "Show MA", group = "Display", tooltip = "Plot the stage moving average from the selected timeframe.")
+color maColor = input.color(#FFFFFF, "MA Color", group = "Display", tooltip = "Colour of the plotted stage moving average.")
+int maWidth = input.int(2, "MA Width", minval = 1, maxval = 5, group = "Display")
+bool showLabels = input.bool(false, "Show Stage Labels", group = "Display", tooltip = "Mark the first bar of each stage change with a label.")
+
+// =============================================================================
+// MOVING AVERAGE
+// =============================================================================
+
+maValue(string type, float src, int length) =>
+    switch type
+        "SMA" => ta.sma(src, length)
+        "EMA" => ta.ema(src, length)
+        "WMA" => ta.wma(src, length)
+        "RMA" => ta.rma(src, length)
+        "VWMA" => ta.vwma(src, length)
+        "HMA" => ta.hma(src, length)
+        => ta.sma(src, length)
+
+// =============================================================================
+// STAGE STATE MACHINE (evaluated on the stage timeframe)
+// =============================================================================
+// Stage 2: body entirely above MA + band, and MA rising
+// Stage 4: body entirely below MA − band, and MA falling
+// Stage 3: after a confirmed Stage 2 until Stage 4
+// Stage 1: after a confirmed Stage 4 until Stage 2
+
+calcWeinstein() =>
+    float ma = maValue(maType, close, maLength)
+    float band = ma * withinRangePercent / 100.0
+    float bodyLow = math.min(open, close)
+    float bodyHigh = math.max(open, close)
+    var string trend = ""
+    int stage = 0
+
+    if bodyLow > ma + band and ma[1] < ma
+        trend := "upward"
+        stage := 2
+    else if bodyHigh < ma - band and ma[1] > ma
+        trend := "downward"
+        stage := 4
+    else if trend == "upward"
+        stage := 3
+    else if trend == "downward"
+        stage := 1
+    else
+        stage := nz(stage[1], 0)
+
+    [ma, stage]
+
+[stageMa, stageId] = request.security(syminfo.tickerid, htf, calcWeinstein(), gaps = barmerge.gaps_off, lookahead = barmerge.lookahead_on)
+
+color stageColor = switch stageId
+    1 => stage1Color
+    2 => stage2Color
+    3 => stage3Color
+    4 => stage4Color
+    => na
+
+string stageTitle = switch stageId
+    1 => "1"
+    2 => "2"
+    3 => "3"
+    4 => "4"
+    => ""
+
+// Recolour the chart candles (body, border, and wick) rather than overlaying a second candle series
+barcolor(colorBars ? stageColor : na, title = "Weinstein Stage")
+
+plot(showMa ? stageMa : na, title = "Stage MA", color = maColor, linewidth = maWidth)
+
+bool stageChanged = stageId != stageId[1] and stageId > 0
+if showLabels and stageChanged and not na(stageColor)
+    color labelText = stageId == 1 ? color.black : color.white
+    label.new(bar_index, high, "Stage " + stageTitle, style = label.style_label_down, color = stageColor, textcolor = labelText, size = size.small)
+
+plot(stageId, title = "Stage", display = display.data_window + display.status_line)
+
+alertcondition(stageId == 1 and stageId[1] != 1, title = "Stage 1", message = "Weinstein Stage 1 (basing)")
+alertcondition(stageId == 2 and stageId[1] != 2, title = "Stage 2", message = "Weinstein Stage 2 (advancing)")
+alertcondition(stageId == 3 and stageId[1] != 3, title = "Stage 3", message = "Weinstein Stage 3 (distribution)")
+alertcondition(stageId == 4 and stageId[1] != 4, title = "Stage 4", message = "Weinstein Stage 4 (declining)")
