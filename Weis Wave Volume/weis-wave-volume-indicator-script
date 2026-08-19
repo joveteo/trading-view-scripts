@@ -2,7 +2,7 @@
 // Source https://github.com/joveteo/trading-view-scripts/tree/main/Weis%20Wave%20Volume/weis-wave-volume-indicator-script
 // © iLanat8
 //@version=6
-indicator("Weis Wave Volume", shorttitle = "WWV", overlay = true)
+indicator("Weis Wave Volume", shorttitle = "WWV", overlay = true, behind_chart = false)
 
 string methodtype = input.string("ATR", "Renko Assignment Method", options = ["ATR", "Traditional", "Part of Price"])
 float methodvalue = input.float(14.0, "Value", minval = 0)
@@ -32,4 +32,6 @@ currclose := hi > prevhigh ? hi : lo < prevlow ? lo : prevclose
 int direction = na
 direction := currclose > prevclose ? 1 : currclose < prevclose ? -1 : nz(direction[1])
 
-barcolor(direction > 0 ? upColor : direction < 0 ? downColor : na)
+color waveColor = direction > 0 ? upColor : direction < 0 ? downColor : na
+plotcandle(open, high, low, close, title = "Wave Candles", color = waveColor, wickcolor = waveColor, bordercolor = waveColor)
+barcolor(waveColor)

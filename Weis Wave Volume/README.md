@@ -1,13 +1,16 @@
 # Weis Wave Volume Indicator
 
-Weis Wave Volume is a TradingView Pine Script indicator that colours candlesticks by Weis wave direction on the main chart.
+Weis Wave Volume is a TradingView Pine Script indicator that overwrites candlesticks on the main chart by Weis wave direction.
 
 ## ✨ Features
 
-- **Wave-coloured candles**: Greens up-waves and reds down-waves on the price chart (no separate pane)
+- **Overwritten candles**: Draws opaque up-wave (green) and down-wave (red) candles on top of the chart series, including body, wick, and border
 - **Renko assignment methods**: ATR, Traditional, or Part of Price brick sizing
 - **Price source options**: Close, Open / Close, or High / Low
 - **Customisable colours**: Choose the up-wave and down-wave candlestick colours
+- **Main chart only**: No separate volume pane
+
+Pine cannot remove TradingView’s native candles. This script covers them by plotting matching candles in front of the series. Keep the chart type set to Candles.
 
 ## 🚀 Installation
 
