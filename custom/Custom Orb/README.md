@@ -1,14 +1,20 @@
-# Opening Range Breakout
+# Custom Orb
 
-Captures the high and low of the first N minutes of the session and tracks whether price breaks those levels. Opening range, breakouts, and points are scored from confirmed one-minute bars, even on a higher chart timeframe.
+Custom opening range breakout. A typical ORB drawing marks the high and low of the first N minutes and leaves the rest to the trader. This script adds session rules, one-minute scoring, filters, and a points table for a specific workflow.
+
+## What was customised
+
+- Opening range, breakouts, and points are scored from confirmed one-minute bars, even on a higher chart timeframe.
+- Market hours, custom range, cutoff, and daylight saving use an explicit IANA timezone.
+- Days can be marked untradable when the range is too narrow or when the daily VIX open is above a threshold (or missing).
+- Session outcome uses a points system, first-breakout priority, and a statistics table.
+- Signal arrows can follow No Bias or Daily Bias; bias does not change scoring.
 
 ![Opening Range Breakout on SPY](/media/opening-range-breakout-spy-sample.png)
 
-By default the range starts at Market Hours and lasts for the Opening Range Period (60 minutes). Custom Range replaces that with an explicit session window. Timezone is an IANA name such as `America/New_York`, so daylight saving is applied. The range and the breakout cutoff must sit inside Market Hours.
+By default the range starts at Market Hours and lasts for the Opening Range Period (60 minutes). Custom Range replaces that with an explicit session window. The range and the breakout cutoff must sit inside Market Hours.
 
-**No Bias** fires one arrow per direction on the first one-minute close beyond ORH or ORL. **Daily Bias** may wait until an extended target is reached. Bias changes arrows only; it does not change scoring.
-
-A session is untradable when the opening range is narrower than the width threshold (0.2% of the session open by default), when the daily VIX open is above its threshold, or when that VIX open is unavailable. Untradable days are excluded from profit, loss, and error percentages.
+**No Bias** fires one arrow per direction on the first one-minute close beyond ORH or ORL. **Daily Bias** may wait until an extended target is reached.
 
 ## Scoring
 
@@ -50,4 +56,4 @@ On charts above one minute, use Once Per Bar so the alert can fire on the first 
 
 US cash equities typically use 60 minutes, `America/New_York`, and 0930–1600. Forex and futures usually need Custom Range and the matching timezone.
 
-See [Installation](../README.md#installation) and [License](../README.md#license) in the repository readme. The legal disclaimer is in [DISCLAIMER.md](../DISCLAIMER.md).
+See [Installation](../../README.md#installation) and [License](../../README.md#license) in the repository readme. The legal disclaimer is in [DISCLAIMER.md](../../DISCLAIMER.md).

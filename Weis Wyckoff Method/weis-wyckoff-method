@@ -1,7 +1,7 @@
 // This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
 // Citation Weis, D. H. (2013). Trades About to Happen: A Modern Adaptation of the Wyckoff Method. Wiley. ISBN 978-0-470-48780-8.
 // Citation Wyckoff, R. D. (1910). Studies in Tape Reading.
-// Source https://github.com/joveteo/trading-view-scripts/tree/main/Weis%20Wyckoff%20Method/weis-wyckoff-method-indicator-script
+// Source https://github.com/joveteo/trading-view-scripts/tree/main/Weis%20Wyckoff%20Method/weis-wyckoff-method
 // © iLanat8
 //@version=6
 indicator("Weis Wyckoff Method", shorttitle = "Weis Wyckoff", overlay = false)

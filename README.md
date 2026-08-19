@@ -1,44 +1,30 @@
 # TradingView Scripts
 
-Pine Script indicators used in my charting workflow. Each folder holds the script and a readme. Installation, license, and the legal disclaimer are on this page.
+Pine Script indicators used in my charting workflow. Each published indicator folder holds the script and a readme. Personal customisations live in [custom/](custom/). Installation, license, and the legal disclaimer are on this page.
 
 ## Indicators
 
 ### [All Moving Averages](All%20Moving%20Averages/README.md)
 
-- **Script:** [`all-moving-averages-indicator-script`](All%20Moving%20Averages/all-moving-averages-indicator-script)
+- **Script:** [`all-moving-averages`](All%20Moving%20Averages/all-moving-averages)
 
 Plots fourteen moving average types on a single chart.
 
-### [Opening Range Breakout](Opening%20Range%20Breakout/README.md)
-
-- **Script:** [`opening-range-breakout-indicator-script`](Opening%20Range%20Breakout/opening-range-breakout-indicator-script)
-
-Tracks the session opening range and scores breakouts from confirmed one-minute bars.
-
-### [Custom VIX](Custom-Vix/README.md)
-
-- **Script:** [`custom-vix-indicator-script`](Custom-Vix/custom-vix-indicator-script)
-
-Plots daily VIX close and shades the pane when it is above a chosen threshold.
-
 ### [Larry Williams VixFix](Larry%20Williams%20VixFix/README.md)
 
-- **Script:** [`larry-williams-vixfix-indicator-script`](Larry%20Williams%20VixFix/larry-williams-vixfix-indicator-script)
+- **Script:** [`larry-williams-vixfix`](Larry%20Williams%20VixFix/larry-williams-vixfix)
 
 Measures multi-timeframe price deviation from recent highs and lows to mark potential reversals.
 
-### [Supertrend Custom](Supertrend%20Custom/README.md)
-
-- **Script:** [`supertrend_custom_script`](Supertrend%20Custom/supertrend_custom_script)
-
-SuperTrend with an SMA overlay and a table of time spent in green versus red.
-
 ### [Weis Wyckoff Method](Weis%20Wyckoff%20Method/README.md)
 
-- **Script:** [`weis-wyckoff-method-indicator-script`](Weis%20Wyckoff%20Method/weis-wyckoff-method-indicator-script)
+- **Script:** [`weis-wyckoff-method`](Weis%20Wyckoff%20Method/weis-wyckoff-method)
 
 Plots cumulative volume for each directional price wave, after Weis’s adaptation of Wyckoff wave charts.
+
+## Custom
+
+Workflow-specific scripts are in [custom/](custom/).
 
 ## Installation
 
