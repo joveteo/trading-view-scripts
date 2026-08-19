@@ -1,37 +1,23 @@
-# All Moving Averages Indicator
+# All Moving Averages
 
-![All Moving Average Indicator](https://www.tradingview.com/script/SywW5NLn-All-Moving-Averages/) is a comprehensive TradingView indicator that displays 14 different moving average types on a single chart, allowing traders to compare and analyse various smoothing techniques for price action analysis.
+[Published on TradingView](https://www.tradingview.com/script/SywW5NLn-All-Moving-Averages/). Plots fourteen moving average types on one chart so they can be compared without stacking separate indicators. Each type has its own colour family, with darker tones for longer lengths. The script can overlay price or sit in a separate pane.
 
-## 📋 Overview
+## Moving averages
 
-This indicator provides a complete toolkit for trend analysis by plotting 14 major moving average algorithms simultaneously. Each moving average type offers unique characteristics in terms of lag, smoothness, and responsiveness, allowing traders to identify the most effective tool for their specific market conditions and trading strategies.
+| Abbreviation | Name | Behaviour |
+|--------------|------|-----------|
+| SMA | Simple Moving Average | Equal-weighted mean of closes |
+| EMA | Exponential Moving Average | More weight on recent prices |
+| WMA | Weighted Moving Average | Linear weights, newest highest |
+| HMA | Hull Moving Average | Lower lag while staying smooth |
+| VWMA | Volume Weighted Moving Average | Weights by volume |
+| RMA | Relative Moving Average (Wilder) | Wilder’s smoothing, as in RSI |
+| DEMA | Double Exponential Moving Average | Two EMAs to cut lag |
+| TEMA | Triple Exponential Moving Average | Three EMAs, still less lag |
+| KAMA | Kaufman Adaptive Moving Average | Speeds up or slows with volatility |
+| ALMA | Arnaud Legoux Moving Average | Offset Gaussian weights |
+| LSMA | Least Squares Moving Average | Linear regression line |
+| TMA | Triangular Moving Average | Double-smoothed SMA |
+| ZLEMA | Zero Lag Exponential Moving Average | Attempts to offset EMA lag |
 
-## 📊 Supported Moving Averages
-
-| Abbreviation | Full Name | Characteristics |
-|-------------|-----------|-----------------|
-| **SMA** | Simple Moving Average | Basic average of prices over specified period |
-| **EMA** | Exponential Moving Average | More responsive to recent price changes |
-| **WMA** | Weighted Moving Average | Recent prices have higher weight |
-| **HMA** | Hull Moving Average | Reduces lag while maintaining smoothness |
-| **VWMA** | Volume Weighted Moving Average | Incorporates volume in calculation |
-| **RMA** | Relative Moving Average (Wilder's) | Used in RSI and other indicators |
-| **DEMA** | Double Exponential Moving Average | Two EMAs for reduced lag |
-| **TEMA** | Triple Exponential Moving Average | Three EMAs for minimal lag |
-| **KAMA** | Kaufman Adaptive Moving Average | Adapts to market volatility |
-| **ALMA** | Arnaud Legoux Moving Average | Offset-based for reduced noise |
-| **LSMA** | Least Squares Moving Average | Linear regression line |
-| **TMA** | Triangular Moving Average | Double-smoothed for stability |
-| **ZLEMA** | Zero Lag Exponential Moving Average | Eliminates inherent lag |
-
-## 🚀 Installation
-
-1. Open TradingView and navigate to the Pine Editor
-2. Copy the contents of `all-moving-averages-indicator-script`
-3. Paste into the Pine Editor
-4. Click "Add to Chart"
-5. Configure your preferred settings in the indicator inputs
-
-## 📄 License
-
-This project is licensed under the [Mozilla Public License 2.0](https://www.mozilla.org/MPL/2.0/). See the [LICENSE](../LICENSE) file for details.
+See [Installation](../README.md#installation) and [License](../README.md#license) in the repository readme. The legal disclaimer is in [DISCLAIMER.md](../DISCLAIMER.md).
