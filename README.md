@@ -11,6 +11,8 @@ Collection of custom TradingView Pine Script™ indicators and strategies for te
     - [All Moving Averages](#all-moving-averages)
     - [Opening Range Breakout (ORB)](#opening-range-breakout-orb)
     - [Larry Williams VixFix](#larry-williams-vixfix)
+    - [Weinstein Stage Analysis](#weinstein-stage-analysis)
+    - [Weis Wave Volume](#weis-wave-volume)
   - [🧩 Custom Scripts](#-custom-scripts)
   - [🚀 Installation](#-installation)
   - [⚠️ Important Notes](#️-important-notes)
@@ -64,6 +66,31 @@ An implementation of the Larry Williams VixFix indicator for identifying market 
   - Dynamic background colouring with intensity-based visual feedback
   - Statistical analysis with performance tracking
   - Mobile-friendly table display options
+
+
+
+### Weinstein Stage Analysis
+
+- **Script:** [`weinstein-stage-analysis-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/Weinstein%20Stage%20Analysis/weinstein-stage-analysis-indicator-script)
+- **Description:**
+Maps Stan Weinstein’s four-stage cycle onto the chart by recolouring the candles themselves, adapted from the [TrendSpider Weinstein Stage Analysis](https://charts.trendspider.com/shared/679813ca6550e0000970233f) implementation.
+  - Stages calculated on a higher timeframe (weekly by default) using a 30-period moving average
+  - Entire candle (body, border, and wick) painted in the stage colour, drawn in front of the chart symbol
+  - Configurable MA type, proximity band, and stage colours
+  - Optional stage-change labels and alerts for Stages 1–4
+
+
+
+### Weis Wave Volume
+
+- **Script:** [`weis-wave-volume-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/Weis%20Wave%20Volume/weis-wave-volume-indicator-script)
+- **Description:**
+Plots cumulative volume for each directional price wave in a separate pane.
+  - Renko assignment via ATR, Traditional, or Part of Price
+  - Close, Open / Close, or High / Low price source
+  - Oscillating histogram on by default (down-waves below zero)
+  - Optional per-bar normalisation
+  - Auto true-range fallback when volume is unavailable
 
 
 
