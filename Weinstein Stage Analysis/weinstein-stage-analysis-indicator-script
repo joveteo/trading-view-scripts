@@ -3,7 +3,7 @@
 // Source https://github.com/joveteo/trading-view-scripts/tree/main/Weinstein%20Stage%20Analysis/weinstein-stage-analysis-indicator-script
 // © iLanat8
 //@version=6
-indicator("Weinstein Stage Analysis", shorttitle = "Weinstein Stages", overlay = true, max_labels_count = 500)
+indicator("Weinstein Stage Analysis", shorttitle = "Weinstein Stages", overlay = true, behind_chart = false, max_labels_count = 500)
 
 // =============================================================================
 // INPUTS
@@ -19,7 +19,7 @@ color stage2Color = input.color(#008000, "Stage 2 Color", group = "Stage Colours
 color stage3Color = input.color(#FFA500, "Stage 3 Color", group = "Stage Colours", tooltip = "Distribution / topping after Stage 2, until a Stage 4 breakdown.")
 color stage4Color = input.color(#FF0000, "Stage 4 Color", group = "Stage Colours", tooltip = "Declining trend. Candle body is below a falling MA by more than the range band.")
 
-bool colorBars = input.bool(true, "Colour Bars", group = "Display", tooltip = "Recolour the chart candles themselves by stage. Disable to keep the original candle colours.")
+bool colorBars = input.bool(true, "Colour Bars", group = "Display", tooltip = "Paint each candle's body, border, and wick with the stage colour. The script draws these candles in front of the chart symbol so the original green/red edges do not show through.")
 bool showMa = input.bool(true, "Show MA", group = "Display", tooltip = "Plot the stage moving average from the selected timeframe.")
 color maColor = input.color(#FFFFFF, "MA Color", group = "Display", tooltip = "Colour of the plotted stage moving average.")
 int maWidth = input.int(2, "MA Width", minval = 1, maxval = 5, group = "Display")
@@ -86,8 +86,11 @@ string stageTitle = switch stageId
     4 => "4"
     => ""
 
-// Recolour the chart candles (body, border, and wick) rather than overlaying a second candle series
-barcolor(colorBars ? stageColor : na, title = "Weinstein Stage")
+// barcolor() only tints the native body and leaves chart wick/border colours in place.
+// plotcandle() with behind_chart = false draws a full candle (body, border, wick) in front of the symbol.
+bool paintBars = colorBars and not na(stageColor)
+color paintColor = paintBars ? color.new(stageColor, 0) : na
+plotcandle(paintBars ? open : na, high, low, close, title = "Stage Candles", color = paintColor, wickcolor = paintColor, bordercolor = paintColor)
 
 plot(showMa ? stageMa : na, title = "Stage MA", color = maColor, linewidth = maWidth)
 

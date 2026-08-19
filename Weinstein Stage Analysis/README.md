@@ -4,7 +4,7 @@ Weinstein Stage Analysis is a TradingView Pine Script v6 indicator that maps Sta
 
 ## 📋 Overview
 
-The indicator classifies price into one of four stages and changes the **entire bar colour** (body, border, and wick) to match that stage. A stage moving average is plotted for reference.
+The indicator classifies price into one of four stages and paints the **entire candle** (body, border, and wick) in that stage colour. A stage moving average is plotted for reference.
 
 - **Stage 1** (light green): Basing / accumulation after a decline, near a flattening or recovering average.
 - **Stage 2** (green): Confirmed advance. The candle body holds above a rising average by more than the range band.
@@ -15,7 +15,7 @@ Stages are calculated on the selected higher timeframe (weekly by default) and m
 
 ## ✨ Features
 
-- Pine Script v6 overlay that recolours chart candles with `barcolor()` instead of drawing candles on top of price
+- Pine Script v6 overlay that paints body, border, and wick in the stage colour (`plotcandle` drawn in front of the chart symbol)
 - Higher-timeframe calculation (default weekly) so the same stage can be viewed on any chart timeframe
 - Configurable MA type (SMA, EMA, WMA, RMA, VWMA, HMA) and length
 - Adjustable proximity band around the MA
@@ -29,6 +29,7 @@ Stages are calculated on the selected higher timeframe (weekly by default) and m
 3. Paste into the Pine Editor
 4. Click "Add to Chart"
 5. Configure your preferred settings in the indicator inputs
+6. If the original green/red candle edges still show, hide the symbol’s Body, Wicks, and Border under Chart settings → Symbol → Style (or click the eye icon next to the ticker)
 
 ## ⚙️ Configuration
 
@@ -39,12 +40,13 @@ Stages are calculated on the selected higher timeframe (weekly by default) and m
 | MA Type | String | SMA | Moving average algorithm. |
 | Within Range % | Float | 5 | Percentage band around the MA used to confirm Stage 2 and Stage 4. |
 | Stage 1–4 Colours | Colour | light green / green / orange / red | Candle colours for each stage. |
-| Colour Bars | Boolean | true | Recolour chart candles by stage. |
+| Colour Bars | Boolean | true | Paint each candle’s body, border, and wick by stage. |
 | Show MA | Boolean | true | Plot the higher-timeframe moving average. |
 | Show Stage Labels | Boolean | false | Label bars where the stage changes. |
 
 ## ⚠️ Important Notes
 
+- TradingView’s `barcolor()` function cannot change wicks or borders, so this script draws stage candles in front of the chart. If any of the original candle still shows through, hide the symbol’s Body, Wicks, and Border in Chart settings → Symbol → Style.
 - This is an interpretation of Weinstein stage analysis and will not match every discretionary rule from the original method.
 - Stages are computed on the selected higher timeframe. Use a chart timeframe that is the same or lower (for example daily or weekly with the default weekly stages).
 - Historical bars in the same higher-timeframe period share that period's completed stage. The current (forming) higher-timeframe bar can change stage until it closes.

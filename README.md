@@ -75,7 +75,7 @@ An implementation of the Larry Williams VixFix indicator for identifying market 
 - **Description:**
 Maps Stan Weinstein’s four-stage cycle onto the chart by recolouring the candles themselves, adapted from the [TrendSpider Weinstein Stage Analysis](https://charts.trendspider.com/shared/679813ca6550e0000970233f) implementation.
   - Stages calculated on a higher timeframe (weekly by default) using a 30-period moving average
-  - Entire bar colour (body, border, and wick) changes by stage instead of overlaying candles
+  - Entire candle (body, border, and wick) painted in the stage colour, drawn in front of the chart symbol
   - Configurable MA type, proximity band, and stage colours
   - Optional stage-change labels and alerts for Stages 1–4
 
