@@ -79,11 +79,11 @@ An implementation of the Larry Williams VixFix indicator for identifying market 
 
 - **Script:** [`weis-wave-volume-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/Weis%20Wave%20Volume/weis-wave-volume-indicator-script)
 - **Description:**
-Recolors native candlesticks on the main chart using ATR-defined Weis waves (four colours).
-  - Bright green / orange on up-waves and bright red / light green on down-waves
-  - Defaults to ATR 14, Close source, Auto true-range fallback, and chart timeframe
+Plots cumulative volume for each directional price wave in a separate pane.
   - Renko assignment via ATR, Traditional, or Part of Price
-  - Overlay only — no separate volume pane, no drawn-over candle series
+  - Close, Open / Close, or High / Low price source
+  - Optional oscillating (signed) histogram and per-bar normalisation
+  - Auto true-range fallback when volume is unavailable
 
 
 

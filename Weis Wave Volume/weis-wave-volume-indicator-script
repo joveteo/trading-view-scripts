@@ -2,19 +2,14 @@
 // Source https://github.com/joveteo/trading-view-scripts/tree/main/Weis%20Wave%20Volume/weis-wave-volume-indicator-script
 // © iLanat8
 //@version=6
-indicator("Weis Wave Volume", shorttitle = "WWV", overlay = true)
+indicator("Weis Wave Volume", shorttitle = "WWV", overlay = false)
 
 string methodtype = input.string("ATR", "Renko Assignment Method", options = ["ATR", "Traditional", "Part of Price"], group = "Method")
-float methodvalue = input.float(14.0, "Value", minval = 0.000001, group = "Method")
+float methodvalue = input.float(14.0, "Value", minval = 0, group = "Method")
 string pricesource = input.string("Close", "Price Source", options = ["Close", "Open / Close", "High / Low"], group = "Method")
 string useTrueRange = input.string("Auto", "Use True Range instead of Volume", options = ["Always", "Auto", "Never"], group = "Volume")
-bool isOscillating = input.bool(true, "Oscillating", group = "Volume")
+bool isOscillating = input.bool(false, "Oscillating", group = "Volume")
 bool normalize = input.bool(false, "Normalize", group = "Volume")
-
-color upWithTrendColor = input.color(#39FF14, "Up Wave — Rising Bar", group = "Colours", tooltip = "Bright green: a rising candle inside an up wave.")
-color upCounterColor = input.color(#FFB000, "Up Wave — Falling Bar", group = "Colours", tooltip = "Orange: a falling candle inside an up wave.")
-color downWithTrendColor = input.color(#FF1F1F, "Down Wave — Falling Bar", group = "Colours", tooltip = "Bright red: a falling candle inside a down wave.")
-color downCounterColor = input.color(#B7F7B0, "Down Wave — Rising Bar", group = "Colours", tooltip = "Light green: a rising candle inside a down wave.")
 
 bool useClose = pricesource == "Close"
 bool useOpenClose = pricesource == "Open / Close" or useClose
@@ -37,19 +32,15 @@ currclose := hi > prevhigh ? hi : lo < prevlow ? lo : prevclose
 
 int direction = na
 direction := currclose > prevclose ? 1 : currclose < prevclose ? -1 : nz(direction[1])
-
 bool directionHasChanged = ta.change(direction) != 0
-float vol = useTrueRange == "Always" or (useTrueRange == "Auto" and na(volume)) ? ta.tr : volume
+bool directionIsUp = direction > 0
+bool directionIsDown = direction < 0
 
-int barCount = 1
-barCount := not directionHasChanged and normalize ? nz(barCount[1]) + 1 : 1
+float vol = (useTrueRange == "Always" or (useTrueRange == "Auto" and na(volume))) ? ta.tr : volume
+int barcount = 1
+barcount := not directionHasChanged and normalize ? nz(barcount[1]) + 1 : 1
+vol := not directionHasChanged ? nz(vol[1]) + nz(vol) : nz(vol)
+float res = barcount > 1 ? vol / barcount : vol
 
-float waveVolume = na
-waveVolume := not directionHasChanged ? nz(waveVolume[1]) + nz(vol) : nz(vol)
-float result = barCount > 1 ? waveVolume / barCount : waveVolume
-float oscillatingResult = isOscillating and direction < 0 ? -result : result
-plot(oscillatingResult, title = "Wave Volume", display = display.none)
-
-bool bullBar = close >= open
-color waveColor = direction > 0 ? (bullBar ? upWithTrendColor : upCounterColor) : direction < 0 ? (bullBar ? downCounterColor : downWithTrendColor) : na
-barcolor(waveColor, title = "Wave Color")
+plot(isOscillating and directionIsDown ? -res : res, style = plot.style_columns, color = directionIsUp ? color.new(color.green, 75) : color.new(color.red, 75), linewidth = 3, title = "Wave Volume")
+hline(0, "Zero", color = color.new(color.gray, 50))
