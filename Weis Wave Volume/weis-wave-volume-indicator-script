@@ -1,0 +1,46 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// Source https://github.com/joveteo/trading-view-scripts/tree/main/Weis%20Wave%20Volume/weis-wave-volume-indicator-script
+// © iLanat8
+//@version=6
+indicator("Weis Wave Volume", shorttitle = "WWV", overlay = false)
+
+string methodtype = input.string("ATR", "Renko Assignment Method", options = ["ATR", "Traditional", "Part of Price"], group = "Method", tooltip = "How the reversal brick size is measured. ATR uses recent volatility. Traditional uses a fixed price amount. Part of Price uses close divided by Value.")
+float methodvalue = input.float(14.0, "Value", minval = 0, group = "Method", tooltip = "ATR length when the method is ATR. Fixed brick size when Traditional. Divisor of close when Part of Price.")
+string pricesource = input.string("Close", "Price Source", options = ["Close", "Open / Close", "High / Low"], group = "Method", tooltip = "Prices used to detect a one-brick reversal. Close uses close only. Open / Close uses the bar’s open and close. High / Low uses the full range.")
+string useTrueRange = input.string("Auto", "Use True Range instead of Volume", options = ["Always", "Auto", "Never"], group = "Volume", tooltip = "Always sums true range. Auto uses true range only when volume is unavailable. Never uses volume.")
+bool isOscillating = input.bool(true, "Oscillating", group = "Volume", tooltip = "When enabled, down-waves plot below zero and up-waves plot above zero. When disabled, all waves plot as positive columns.")
+bool normalize = input.bool(false, "Normalize", group = "Volume", tooltip = "When enabled, the column is average volume (or true range) per bar in the current wave instead of the wave’s cumulative total.")
+
+bool useClose = pricesource == "Close"
+bool useOpenClose = pricesource == "Open / Close" or useClose
+
+float brickSize = methodvalue
+if methodtype == "ATR"
+    brickSize := ta.atr(math.max(1, int(math.round(methodvalue))))
+else if methodtype == "Part of Price"
+    brickSize := close / methodvalue
+
+float op = useClose ? close : open
+float hi = useOpenClose ? (close >= op ? close : op) : high
+float lo = useOpenClose ? (close <= op ? close : op) : low
+
+float currclose = na
+float prevclose = nz(currclose[1])
+float prevhigh = prevclose + brickSize
+float prevlow = prevclose - brickSize
+currclose := hi > prevhigh ? hi : lo < prevlow ? lo : prevclose
+
+int direction = na
+direction := currclose > prevclose ? 1 : currclose < prevclose ? -1 : nz(direction[1])
+bool directionHasChanged = ta.change(direction) != 0
+bool directionIsUp = direction > 0
+bool directionIsDown = direction < 0
+
+float vol = (useTrueRange == "Always" or (useTrueRange == "Auto" and na(volume))) ? ta.tr : volume
+int barcount = 1
+barcount := not directionHasChanged and normalize ? nz(barcount[1]) + 1 : 1
+vol := not directionHasChanged ? nz(vol[1]) + nz(vol) : nz(vol)
+float res = barcount > 1 ? vol / barcount : vol
+
+plot(isOscillating and directionIsDown ? -res : res, style = plot.style_columns, color = directionIsUp ? color.new(color.green, 75) : color.new(color.red, 75), linewidth = 3, title = "Wave Volume")
+hline(0, "Zero", color = color.new(color.gray, 50))

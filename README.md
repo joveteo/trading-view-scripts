@@ -12,6 +12,7 @@ Collection of custom TradingView Pine Script™ indicators and strategies for te
     - [Opening Range Breakout (ORB)](#opening-range-breakout-orb)
     - [Larry Williams VixFix](#larry-williams-vixfix)
     - [Weinstein Stage Analysis](#weinstein-stage-analysis)
+    - [Weis Wave Volume](#weis-wave-volume)
   - [🧩 Custom Scripts](#-custom-scripts)
   - [🚀 Installation](#-installation)
   - [⚠️ Important Notes](#️-important-notes)
@@ -77,6 +78,19 @@ Maps Stan Weinstein’s four-stage cycle onto the chart by recolouring the candl
   - Entire bar colour (body, border, and wick) changes by stage instead of overlaying candles
   - Configurable MA type, proximity band, and stage colours
   - Optional stage-change labels and alerts for Stages 1–4
+
+
+
+### Weis Wave Volume
+
+- **Script:** [`weis-wave-volume-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/Weis%20Wave%20Volume/weis-wave-volume-indicator-script)
+- **Description:**
+Plots cumulative volume for each directional price wave in a separate pane.
+  - Renko assignment via ATR, Traditional, or Part of Price
+  - Close, Open / Close, or High / Low price source
+  - Oscillating histogram on by default (down-waves below zero)
+  - Optional per-bar normalisation
+  - Auto true-range fallback when volume is unavailable
 
 
 
