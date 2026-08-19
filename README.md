@@ -81,7 +81,7 @@ An implementation of the Larry Williams VixFix indicator for identifying market 
 - **Description:**
 Recolors native candlesticks on the main chart by Weis wave direction and volume strength (four colours).
   - Bright green / dark green up-waves and bright red / dark red down-waves
-  - Strong vs weak colour from current wave volume versus the previous wave in the same direction
+  - Strong vs weak colour from current wave volume versus the previous wave
   - Renko assignment via ATR, Traditional, or Part of Price
   - Overlay only — no separate volume pane
 

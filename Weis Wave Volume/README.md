@@ -5,7 +5,7 @@ Weis Wave Volume is a TradingView Pine Script indicator that recolors the chart�
 ## ✨ Features
 
 - **Four native bar colours**: Bright green / dark green for up-waves and bright red / dark red for down-waves
-- **Volume strength**: Strong colours when the current wave’s cumulative volume exceeds the previous wave in the same direction; weak colours otherwise
+- **Volume strength**: Strong colours when the current wave’s cumulative volume exceeds the previous wave; weak colours otherwise
 - **Renko assignment methods**: ATR, Traditional, or Part of Price brick sizing
 - **Price source options**: Close, Open / Close, or High / Low
 - **True range fallback**: Optionally use true range instead of volume (Always / Auto / Never)
