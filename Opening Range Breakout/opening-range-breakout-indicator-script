@@ -526,6 +526,12 @@ int down_cur = valid_orw ? math.max(0, get_1up((orl - l_src) / (orw * tPer))) : 
 
 // SIGNAL DETECTION
 
+// Evaluate history-dependent crossing functions on every chart calculation.
+bool xdown = ta.crossunder(close, orl)
+bool xdown2 = ta.crossunder(close, orl - orw * tPer)
+bool xup = ta.crossover(close, orh)
+bool xup2 = ta.crossover(close, orh + orw * tPer)
+
 if not breakout_cutoff_locked and is_tradable_day
     if not useBias
         if broke_high_this_bar
@@ -539,14 +545,10 @@ if not breakout_cutoff_locked and is_tradable_day
             up_check := true
 
         if confirmed_bar
-            bool xdown = ta.crossunder(close, orl)
-            bool xdown2 = ta.crossunder(close, orl - orw * tPer)
             if ((day_dir != 1 and xdown) or (day_dir == 1 and xdown2)) and down_check
                 down_signal := true
                 down_check := false
 
-            bool xup = ta.crossover(close, orh)
-            bool xup2 = ta.crossover(close, orh + orw * tPer)
             if ((day_dir != -1 and xup) or (day_dir == -1 and xup2)) and up_check
                 up_signal := true
                 up_check := false
