@@ -1,19 +1,5 @@
-# Custom VIX Indicator
+# Custom VIX
 
-Custom VIX is a TradingView Pine Script indicator that plots daily VIX close values in a separate pane and highlights periods when VIX exceeds a configurable threshold.
+Plots the daily VIX close in a separate pane and shades the pane when VIX is above a chosen threshold. The symbol defaults to `CBOE:VIX`. Threshold and shade opacity are inputs.
 
-## ✨ Features
-
-- **Daily VIX Series**: Displays 1D VIX close in a dedicated pane
-- **Configurable Threshold**: Set a VIX level to watch for elevated volatility
-- **Visual Highlight**: Shades the pane when VIX is above the threshold
-- **Customisable Symbol**: Change the VIX symbol if needed (default: CBOE:VIX)
-- **Adjustable Opacity**: Control shade intensity for readability
-
-## 🚀 Installation
-
-1. Open TradingView and navigate to the Pine Editor
-2. Copy the contents of `custom-vix-indicator-script`
-3. Paste into the Pine Editor
-4. Click "Add to Chart"
-5. Configure your preferred settings in the indicator inputs
+See [Installation](../README.md#installation) and [License](../README.md#license) in the repository readme. The legal disclaimer is in [DISCLAIMER.md](../DISCLAIMER.md).

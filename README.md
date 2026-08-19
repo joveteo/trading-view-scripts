@@ -1,113 +1,56 @@
-# TradingView Scripts & Strategies
+# TradingView Scripts
 
-Collection of custom TradingView Pine Script™ indicators and strategies for technical analysis and algorithmic trading.
+Pine Script indicators used in my charting workflow. Each folder holds the script and a readme. Installation, license, and the legal disclaimer are on this page.
 
-## 📚 Table of Contents
+## Indicators
 
-- [TradingView Scripts](#tradingview-scripts--strategies)
-  - [📚 Table of Contents](#-table-of-contents)
-  - [📋 Overview](#-overview)
-  - [📊 Available Indicators](#-available-indicators)
-    - [All Moving Averages](#all-moving-averages)
-    - [Opening Range Breakout (ORB)](#opening-range-breakout-orb)
-    - [Custom VIX](#custom-vix)
-    - [Larry Williams VixFix](#larry-williams-vixfix)
-    - [Weis Wyckoff Method](#weis-wyckoff-method)
-  - [🚀 Installation](#-installation)
-  - [⚠️ Important Notes](#️-important-notes)
-  - [📄 License](#-license)
+### [All Moving Averages](All%20Moving%20Averages/README.md)
 
+- **Script:** [`all-moving-averages-indicator-script`](All%20Moving%20Averages/all-moving-averages-indicator-script)
 
+Plots fourteen moving average types on a single chart.
 
-## 📋 Overview
+### [Opening Range Breakout](Opening%20Range%20Breakout/README.md)
 
-Each indicator is made to solve gaps that I have identified in my workflow.
+- **Script:** [`opening-range-breakout-indicator-script`](Opening%20Range%20Breakout/opening-range-breakout-indicator-script)
 
-## 📊 Available Indicators
+Tracks the session opening range and scores breakouts from confirmed one-minute bars.
 
+### [Custom VIX](Custom-Vix/README.md)
 
+- **Script:** [`custom-vix-indicator-script`](Custom-Vix/custom-vix-indicator-script)
 
-### All Moving Averages
+Plots daily VIX close and shades the pane when it is above a chosen threshold.
 
-- **Script:** [`all-moving-averages-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/All%20Moving%20Averages/all-moving-averages-indicator-script)
-- **Description:**
-A comprehensive indicator featuring 14 different moving averages (SMA, EMA, WMA, HMA, VWMA, RMA, DEMA, TEMA, KAMA, ALMA, LSMA, TMA, ZLEMA) with multiple configurable lengths for each type.
-  - User-friendly tooltips for each input
-  - Unique colour for each MA type with progressively darker tones for higher lengths
-  - Option to overlay on the main chart or display in a separate pane
-  - Designed to help users bypass TradingView's indicator limit by combining many MAs in one script
+### [Larry Williams VixFix](Larry%20Williams%20VixFix/README.md)
 
+- **Script:** [`larry-williams-vixfix-indicator-script`](Larry%20Williams%20VixFix/larry-williams-vixfix-indicator-script)
 
+Measures multi-timeframe price deviation from recent highs and lows to mark potential reversals.
 
-### Opening Range Breakout (ORB)
+### [Supertrend Custom](Supertrend%20Custom/README.md)
 
-- **Script:** [`opening-range-breakout-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/Opening%20Range%20Breakout/opening-range-breakout-indicator-script)
-- **Description:**
-Identifies and tracks opening range breakouts with customisable duration, advanced statistics tracking, dynamic visual feedback, and session trend analysis.
-  - Customisable opening range from 1 to 480 minutes
-  - Dynamic range fill with colour-coded session status
-  - Advanced breakout logic with first-signal priority
-  - Session trend indicators (SMA, EMA, RMA, WMA, Anchor VWAP)
-  - Customisable statistics table with colour coordination
+- **Script:** [`supertrend_custom_script`](Supertrend%20Custom/supertrend_custom_script)
 
+SuperTrend with an SMA overlay and a table of time spent in green versus red.
 
+### [Weis Wyckoff Method](Weis%20Wyckoff%20Method/README.md)
 
-### Custom VIX
+- **Script:** [`weis-wyckoff-method-indicator-script`](Weis%20Wyckoff%20Method/weis-wyckoff-method-indicator-script)
 
-- **Script:** [`custom-vix-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/Custom-Vix/custom-vix-indicator-script)
-- **Description:**
-Plots daily VIX close in a separate pane and highlights periods when VIX exceeds a configurable threshold.
-  - Daily VIX series with adjustable symbol (default: CBOE:VIX)
-  - Configurable threshold line with pane shading above the level
-  - Adjustable shade opacity for readability
+Plots cumulative volume for each directional price wave, after Weis’s adaptation of Wyckoff wave charts.
 
+## Installation
 
+1. Open TradingView and go to the Pine Editor.
+2. Copy the script file for the indicator you want.
+3. Paste it into the Pine Editor and click Add to Chart.
+4. Set the inputs to match your market and timeframe.
 
-### Larry Williams VixFix
+## Notes
 
-- **Script:** [`larry-williams-vixfix-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/Larry%20Williams%20VixFix/larry-williams-vixfix-indicator-script)
-- **Description:**
-An implementation of the Larry Williams VixFix indicator for identifying market bottoms and tops through multi-timeframe volatility analysis.
-  - Configurable lengths for buy and sell signals (default 22, 66, 132 days)
-  - Dynamic background colouring with intensity-based visual feedback
-  - Statistical analysis with performance tracking
-  - Mobile-friendly table display options
+These tools are for education and research. They are not financial advice. Use position sizing and test on history before live use. The full legal text is in [DISCLAIMER.md](DISCLAIMER.md).
 
+## License
 
-
-### Weis Wyckoff Method
-
-- **Script:** [`weis-wyckoff-method-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/Weis%20Wyckoff%20Method/weis-wyckoff-method-indicator-script)
-- **Description:**
-Plots cumulative volume for each directional price wave in a separate pane, following David H. Weis’s adaptation of Richard D. Wyckoff’s wave charts.
-  - Renko assignment via ATR, Traditional, or Part of Price
-  - Close, Open / Close, or High / Low price source
-  - Oscillating histogram on by default (down-waves below zero)
-  - Optional per-bar normalisation
-  - Auto true-range fallback when volume is unavailable, as described by Weis
-
-
-
-## 🚀 Installation
-
-1. Open TradingView and navigate to the Pine Editor
-2. Copy the contents of the indicator script file listed above (e.g. `all-moving-averages-indicator-script`)
-3. Paste into the Pine Editor
-4. Click "Add to Chart"
-5. Configure your preferred settings in the indicator inputs
-
-
-
-## ⚠️ Important Notes
-
-- **Educational Purpose**: All tools are for educational and informational purposes only
-- **No Financial Advice**: These indicators do not constitute financial advice
-- **Risk Management**: Always implement proper risk management with stop losses and position sizing
-- **Backtesting**: Test on historical data before applying to live trading
-- **Disclaimer**: See [DISCLAIMER.md](DISCLAIMER.md) for full legal disclaimer
-
-
-
-## 📄 License
-
-This repository is licensed under the [Mozilla Public License 2.0](https://www.mozilla.org/MPL/2.0/). See the [LICENSE](LICENSE) file for details.
+This repository is licensed under the [Mozilla Public License 2.0](LICENSE).
