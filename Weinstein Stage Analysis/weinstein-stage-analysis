@@ -11,10 +11,10 @@ indicator("Weinstein Stage Analysis", shorttitle = "Weinstein Stages", overlay =
 // INPUTS
 // =============================================================================
 
-string htf = input.timeframe("W", "Stage Timeframe", group = "Moving Average", tooltip = "Weinstein analysis is calculated on this timeframe and mapped onto the chart. Weekly is the classic setting.")
-int maLength = input.int(30, "MA Length", minval = 1, group = "Moving Average", tooltip = "Lookback for the stage moving average. Weinstein's original method uses a 30-week SMA.")
-string maType = input.string("SMA", "MA Type", options = ["SMA", "EMA", "WMA", "RMA", "VWMA", "HMA"], group = "Moving Average", tooltip = "Moving average type used for stage detection.")
-float withinRangePercent = input.float(5.0, "Within Range %", minval = 0.0, maxval = 25.0, step = 0.5, group = "Moving Average", tooltip = "Percentage band around the MA. Stage 2 requires the candle body above MA + this band; Stage 4 requires the body below MA − this band.")
+string htf = input.timeframe("W", "Stage Timeframe", group = "Moving Average", tooltip = "Weinstein analysis is calculated on this timeframe and mapped onto the chart. Weekly is the classic setting.", display = display.none)
+int maLength = input.int(30, "MA Length", minval = 1, group = "Moving Average", tooltip = "Lookback for the stage moving average. Weinstein's original method uses a 30-week SMA.", display = display.none)
+string maType = input.string("SMA", "MA Type", options = ["SMA", "EMA", "WMA", "RMA", "VWMA", "HMA"], group = "Moving Average", tooltip = "Moving average type used for stage detection.", display = display.none)
+float withinRangePercent = input.float(5.0, "Within Range %", minval = 0.0, maxval = 25.0, step = 0.5, group = "Moving Average", tooltip = "Percentage band around the MA. Stage 2 requires the candle body above MA + this band; Stage 4 requires the body below MA − this band.", display = display.none)
 
 color stage1Color = input.color(#90EE90, "Stage 1 Color", group = "Stage Colours", tooltip = "Basing / accumulation after a decline. Price is no longer confirmed in Stage 4.")
 color stage2Color = input.color(#008000, "Stage 2 Color", group = "Stage Colours", tooltip = "Advancing trend. Candle body is above a rising MA by more than the range band.")
@@ -24,7 +24,7 @@ color stage4Color = input.color(#FF0000, "Stage 4 Color", group = "Stage Colours
 bool colorBars = input.bool(true, "Colour Bars", group = "Display", tooltip = "Paint each candle's body, border, and wick with the stage colour. The script draws these candles in front of the chart symbol so the original green/red edges do not show through.")
 bool showMa = input.bool(true, "Show MA", group = "Display", tooltip = "Plot the stage moving average from the selected timeframe.")
 color maColor = input.color(#FFFFFF, "MA Color", group = "Display", tooltip = "Colour of the plotted stage moving average.")
-int maWidth = input.int(2, "MA Width", minval = 1, maxval = 5, group = "Display")
+int maWidth = input.int(2, "MA Width", minval = 1, maxval = 5, group = "Display", display = display.none)
 bool showLabels = input.bool(false, "Show Stage Labels", group = "Display", tooltip = "Mark the first bar of each stage change with a label.")
 
 // =============================================================================
@@ -92,16 +92,16 @@ string stageTitle = switch stageId
 // plotcandle() with behind_chart = false draws a full candle (body, border, wick) in front of the symbol.
 bool paintBars = colorBars and not na(stageColor)
 color paintColor = paintBars ? color.new(stageColor, 0) : na
-plotcandle(paintBars ? open : na, high, low, close, title = "Stage Candles", color = paintColor, wickcolor = paintColor, bordercolor = paintColor)
+plotcandle(paintBars ? open : na, high, low, close, title = "Stage Candles", color = paintColor, wickcolor = paintColor, bordercolor = paintColor, display = display.all - display.status_line)
 
-plot(showMa ? stageMa : na, title = "Stage MA", color = maColor, linewidth = maWidth)
+plot(showMa ? stageMa : na, title = "Stage MA", color = maColor, linewidth = maWidth, display = display.all - display.status_line)
 
 bool stageChanged = stageId != stageId[1] and stageId > 0
 if showLabels and stageChanged and not na(stageColor)
     color labelText = stageId == 1 ? color.black : color.white
     label.new(bar_index, high, "Stage " + stageTitle, style = label.style_label_down, color = stageColor, textcolor = labelText, size = size.small)
 
-plot(stageId, title = "Stage", display = display.data_window + display.status_line)
+plot(stageId, title = "Stage", display = display.data_window)
 
 alertcondition(stageId == 1 and stageId[1] != 1, title = "Stage 1", message = "Weinstein Stage 1 (basing)")
 alertcondition(stageId == 2 and stageId[1] != 2, title = "Stage 2", message = "Weinstein Stage 2 (advancing)")
