@@ -11,7 +11,7 @@ Weis Wave Volume is a TradingView Pine Script indicator that plots cumulative vo
 - **Oscillating**: Optional signed histogram with down-waves below zero
 - **Normalize**: Optional average volume per bar in the current wave
 
-Default inputs match the common ATR 14, Close, Auto true-range setup on the chart timeframe. Oscillating and Normalize are off by default.
+Default inputs match the common ATR 14, Close, Auto true-range setup on the chart timeframe. Oscillating is on by default; Normalize is off.
 
 ## 🚀 Installation
 

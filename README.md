@@ -82,7 +82,8 @@ An implementation of the Larry Williams VixFix indicator for identifying market 
 Plots cumulative volume for each directional price wave in a separate pane.
   - Renko assignment via ATR, Traditional, or Part of Price
   - Close, Open / Close, or High / Low price source
-  - Optional oscillating (signed) histogram and per-bar normalisation
+  - Oscillating histogram on by default (down-waves below zero)
+  - Optional per-bar normalisation
   - Auto true-range fallback when volume is unavailable
 
 
