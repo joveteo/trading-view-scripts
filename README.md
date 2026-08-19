@@ -12,6 +12,7 @@ Collection of custom TradingView Pine Script™ indicators and strategies for te
     - [Opening Range Breakout (ORB)](#opening-range-breakout-orb)
     - [Custom VIX](#custom-vix)
     - [Larry Williams VixFix](#larry-williams-vixfix)
+    - [Weis Wave Volume](#weis-wave-volume)
   - [🚀 Installation](#-installation)
   - [⚠️ Important Notes](#️-important-notes)
   - [📄 License](#-license)
@@ -71,6 +72,19 @@ An implementation of the Larry Williams VixFix indicator for identifying market 
   - Dynamic background colouring with intensity-based visual feedback
   - Statistical analysis with performance tracking
   - Mobile-friendly table display options
+
+
+
+### Weis Wave Volume
+
+- **Script:** [`weis-wave-volume-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/Weis%20Wave%20Volume/weis-wave-volume-indicator-script)
+- **Description:**
+Plots cumulative volume for each directional price wave in a separate pane.
+  - Renko assignment via ATR, Traditional, or Part of Price
+  - Close, Open / Close, or High / Low price source
+  - Oscillating histogram on by default (down-waves below zero)
+  - Optional per-bar normalisation
+  - Auto true-range fallback when volume is unavailable
 
 
 
