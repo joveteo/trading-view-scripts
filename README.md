@@ -1,113 +1,48 @@
-# TradingView Scripts & Strategies
+# TradingView Scripts
 
-Collection of custom TradingView Pine Script™ indicators and strategies for technical analysis and algorithmic trading.
+Pine Script indicators used in my charting workflow. Each published indicator folder holds the script and a readme. Personal customisations live in [custom/](custom/). Installation, license, and the legal disclaimer are on this page.
 
-## 📚 Table of Contents
+## Indicators
 
-- [TradingView Scripts](#tradingview-scripts--strategies)
-  - [📚 Table of Contents](#-table-of-contents)
-  - [📋 Overview](#-overview)
-  - [📊 Available Indicators](#-available-indicators)
-    - [All Moving Averages](#all-moving-averages)
-    - [Opening Range Breakout (ORB)](#opening-range-breakout-orb)
-    - [Custom VIX](#custom-vix)
-    - [Larry Williams VixFix](#larry-williams-vixfix)
-    - [Weis Wave Volume](#weis-wave-volume)
-  - [🚀 Installation](#-installation)
-  - [⚠️ Important Notes](#️-important-notes)
-  - [📄 License](#-license)
+### [All Moving Averages](All%20Moving%20Averages/README.md)
 
+- **Script:** [`all-moving-averages`](All%20Moving%20Averages/all-moving-averages)
 
+Plots fourteen moving average types on a single chart.
 
-## 📋 Overview
+### [Larry Williams VixFix](Larry%20Williams%20VixFix/README.md)
 
-Each indicator is made to solve gaps that I have identified in my workflow.
+- **Script:** [`larry-williams-vixfix`](Larry%20Williams%20VixFix/larry-williams-vixfix)
 
-## 📊 Available Indicators
+Measures multi-timeframe price deviation from recent highs and lows to mark potential reversals.
 
+### [Weinstein Stage Analysis](Weinstein%20Stage%20Analysis/README.md)
 
+- **Script:** [`weinstein-stage-analysis`](Weinstein%20Stage%20Analysis/weinstein-stage-analysis)
 
-### All Moving Averages
+Maps Stan Weinstein’s four-stage cycle onto the chart by painting candles from a higher-timeframe moving average.
 
-- **Script:** [`all-moving-averages-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/All%20Moving%20Averages/all-moving-averages-indicator-script)
-- **Description:**
-A comprehensive indicator featuring 14 different moving averages (SMA, EMA, WMA, HMA, VWMA, RMA, DEMA, TEMA, KAMA, ALMA, LSMA, TMA, ZLEMA) with multiple configurable lengths for each type.
-  - User-friendly tooltips for each input
-  - Unique colour for each MA type with progressively darker tones for higher lengths
-  - Option to overlay on the main chart or display in a separate pane
-  - Designed to help users bypass TradingView's indicator limit by combining many MAs in one script
+### [Weis Wyckoff Method](Weis%20Wyckoff%20Method/README.md)
 
+- **Script:** [`weis-wyckoff-method`](Weis%20Wyckoff%20Method/weis-wyckoff-method)
 
+Plots cumulative volume for each directional price wave, after Weis’s adaptation of Wyckoff wave charts.
 
-### Opening Range Breakout (ORB)
+## Custom
 
-- **Script:** [`opening-range-breakout-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/Opening%20Range%20Breakout/opening-range-breakout-indicator-script)
-- **Description:**
-Identifies and tracks opening range breakouts with customisable duration, advanced statistics tracking, dynamic visual feedback, and session trend analysis.
-  - Customisable opening range from 1 to 480 minutes
-  - Dynamic range fill with colour-coded session status
-  - Advanced breakout logic with first-signal priority
-  - Session trend indicators (SMA, EMA, RMA, WMA, Anchor VWAP)
-  - Customisable statistics table with colour coordination
+Workflow-specific scripts are in [custom/](custom/).
 
+## Installation
 
+1. Open TradingView and go to the Pine Editor.
+2. Copy the script file for the indicator you want.
+3. Paste it into the Pine Editor and click Add to Chart.
+4. Set the inputs to match your market and timeframe.
 
-### Custom VIX
+## Notes
 
-- **Script:** [`custom-vix-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/Custom-Vix/custom-vix-indicator-script)
-- **Description:**
-Plots daily VIX close in a separate pane and highlights periods when VIX exceeds a configurable threshold.
-  - Daily VIX series with adjustable symbol (default: CBOE:VIX)
-  - Configurable threshold line with pane shading above the level
-  - Adjustable shade opacity for readability
+These tools are for education and research. They are not financial advice. Use position sizing and test on history before live use. The full legal text is in [DISCLAIMER.md](DISCLAIMER.md).
 
+## License
 
-
-### Larry Williams VixFix
-
-- **Script:** [`larry-williams-vixfix-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/Larry%20Williams%20VixFix/larry-williams-vixfix-indicator-script)
-- **Description:**
-An implementation of the Larry Williams VixFix indicator for identifying market bottoms and tops through multi-timeframe volatility analysis.
-  - Configurable lengths for buy and sell signals (default 22, 66, 132 days)
-  - Dynamic background colouring with intensity-based visual feedback
-  - Statistical analysis with performance tracking
-  - Mobile-friendly table display options
-
-
-
-### Weis Wave Volume
-
-- **Script:** [`weis-wave-volume-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/Weis%20Wave%20Volume/weis-wave-volume-indicator-script)
-- **Description:**
-Plots cumulative volume for each directional price wave in a separate pane.
-  - Renko assignment via ATR, Traditional, or Part of Price
-  - Close, Open / Close, or High / Low price source
-  - Oscillating histogram on by default (down-waves below zero)
-  - Optional per-bar normalisation
-  - Auto true-range fallback when volume is unavailable
-
-
-
-## 🚀 Installation
-
-1. Open TradingView and navigate to the Pine Editor
-2. Copy the contents of the indicator script file listed above (e.g. `all-moving-averages-indicator-script`)
-3. Paste into the Pine Editor
-4. Click "Add to Chart"
-5. Configure your preferred settings in the indicator inputs
-
-
-
-## ⚠️ Important Notes
-
-- **Educational Purpose**: All tools are for educational and informational purposes only
-- **No Financial Advice**: These indicators do not constitute financial advice
-- **Risk Management**: Always implement proper risk management with stop losses and position sizing
-- **Backtesting**: Test on historical data before applying to live trading
-- **Disclaimer**: See [DISCLAIMER.md](DISCLAIMER.md) for full legal disclaimer
-
-
-
-## 📄 License
-
-This repository is licensed under the [Mozilla Public License 2.0](https://www.mozilla.org/MPL/2.0/). See the [LICENSE](LICENSE) file for details.
+This repository is licensed under the [Mozilla Public License 2.0](LICENSE).
