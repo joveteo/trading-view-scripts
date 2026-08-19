@@ -1,20 +1,22 @@
 # Weis Wave Volume Indicator
 
-Weis Wave Volume is a TradingView Pine Script indicator that recolors the chart’s native candlesticks by Weis wave direction.
+Weis Wave Volume is a TradingView Pine Script indicator that calculates cumulative volume for ATR-defined price waves and recolors the chart’s native candlesticks.
 
 ## ✨ Features
 
 - **Native bar colours**: Changes the chart’s own candlesticks (does not draw a second candle series on top)
 - **Four colours**:
-  - Bright teal: up-wave bar that closes at or above its open
-  - Dark teal: up-wave bar that closes below its open
+  - Bright green: up-wave bar that closes at or above its open
+  - Orange: up-wave bar that closes below its open
   - Bright red: down-wave bar that closes at or below its open
-  - Maroon: down-wave bar that closes above its open
+  - Light green: down-wave bar that closes above its open
+- **Reference defaults**: ATR 14, Close price source, Auto true-range fallback, chart timeframe, and oscillating wave volume
 - **Renko assignment methods**: ATR, Traditional, or Part of Price brick sizing
 - **Price source options**: Close, Open / Close, or High / Low
+- **Weis Wave Volume calculation**: Accumulates volume within each detected wave and resets when direction changes
 - **Main chart only**: No separate volume pane
 
-This uses native bar colouring. For wicks and borders to match the body, open Chart settings → Symbol and set wick and border colours to follow the candle (or the same as the body). Keep the chart type on Candles.
+The oscillating wave-volume result is calculated but hidden so the indicator stays on the main chart. This uses native `barcolor()` only—there is no candle overlay or highlight. TradingView controls wick and border colours separately; in Chart settings → Symbol, set them to follow the candle or match the body. Keep the chart type on Candles.
 
 ## 🚀 Installation
 

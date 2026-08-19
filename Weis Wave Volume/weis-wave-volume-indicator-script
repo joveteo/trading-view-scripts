@@ -5,19 +5,23 @@
 indicator("Weis Wave Volume", shorttitle = "WWV", overlay = true)
 
 string methodtype = input.string("ATR", "Renko Assignment Method", options = ["ATR", "Traditional", "Part of Price"], group = "Method")
-float methodvalue = input.float(14.0, "Value", minval = 0, group = "Method")
+float methodvalue = input.float(14.0, "Value", minval = 0.000001, group = "Method")
 string pricesource = input.string("Close", "Price Source", options = ["Close", "Open / Close", "High / Low"], group = "Method")
-color upWithTrendColor = input.color(#26A69A, "Up Wave (with trend)", group = "Colours", tooltip = "Up-wave bar that closes at or above its open.")
-color upCounterColor = input.color(#00695C, "Up Wave (counter)", group = "Colours", tooltip = "Up-wave bar that closes below its open.")
-color downWithTrendColor = input.color(#EF5350, "Down Wave (with trend)", group = "Colours", tooltip = "Down-wave bar that closes at or below its open.")
-color downCounterColor = input.color(#800000, "Down Wave (counter)", group = "Colours", tooltip = "Down-wave bar that closes above its open.")
+string useTrueRange = input.string("Auto", "Use True Range instead of Volume", options = ["Always", "Auto", "Never"], group = "Volume")
+bool isOscillating = input.bool(true, "Oscillating", group = "Volume")
+bool normalize = input.bool(false, "Normalize", group = "Volume")
+
+color upWithTrendColor = input.color(#39FF14, "Up Wave — Rising Bar", group = "Colours", tooltip = "Bright green: a rising candle inside an up wave.")
+color upCounterColor = input.color(#FFB000, "Up Wave — Falling Bar", group = "Colours", tooltip = "Orange: a falling candle inside an up wave.")
+color downWithTrendColor = input.color(#FF1F1F, "Down Wave — Falling Bar", group = "Colours", tooltip = "Bright red: a falling candle inside a down wave.")
+color downCounterColor = input.color(#B7F7B0, "Down Wave — Rising Bar", group = "Colours", tooltip = "Light green: a rising candle inside a down wave.")
 
 bool useClose = pricesource == "Close"
 bool useOpenClose = pricesource == "Open / Close" or useClose
 
 float brickSize = methodvalue
 if methodtype == "ATR"
-    brickSize := ta.atr(int(math.round(methodvalue)))
+    brickSize := ta.atr(math.max(1, int(math.round(methodvalue))))
 else if methodtype == "Part of Price"
     brickSize := close / methodvalue
 
@@ -33,6 +37,18 @@ currclose := hi > prevhigh ? hi : lo < prevlow ? lo : prevclose
 
 int direction = na
 direction := currclose > prevclose ? 1 : currclose < prevclose ? -1 : nz(direction[1])
+
+bool directionHasChanged = ta.change(direction) != 0
+float vol = useTrueRange == "Always" or (useTrueRange == "Auto" and na(volume)) ? ta.tr : volume
+
+int barCount = 1
+barCount := not directionHasChanged and normalize ? nz(barCount[1]) + 1 : 1
+
+float waveVolume = na
+waveVolume := not directionHasChanged ? nz(waveVolume[1]) + nz(vol) : nz(vol)
+float result = barCount > 1 ? waveVolume / barCount : waveVolume
+float oscillatingResult = isOscillating and direction < 0 ? -result : result
+plot(oscillatingResult, title = "Wave Volume", display = display.none)
 
 bool bullBar = close >= open
 color waveColor = direction > 0 ? (bullBar ? upWithTrendColor : upCounterColor) : direction < 0 ? (bullBar ? downCounterColor : downWithTrendColor) : na
