@@ -7,11 +7,10 @@ indicator("Weis Wave Volume", shorttitle = "WWV", overlay = true)
 string methodtype = input.string("ATR", "Renko Assignment Method", options = ["ATR", "Traditional", "Part of Price"], group = "Method")
 float methodvalue = input.float(14.0, "Value", minval = 0, group = "Method")
 string pricesource = input.string("Close", "Price Source", options = ["Close", "Open / Close", "High / Low"], group = "Method")
-string useTrueRange = input.string("Auto", "Use True Range instead of Volume", options = ["Always", "Auto", "Never"], group = "Volume", tooltip = "Always uses true range. Auto uses true range when volume is unavailable. Never uses volume.")
-color upStrongColor = input.color(#26A69A, "Up Wave (strong)", group = "Colours", tooltip = "Current wave volume is greater than the previous wave.")
-color upWeakColor = input.color(#1B5E20, "Up Wave (weak)", group = "Colours", tooltip = "Current wave volume is less than or equal to the previous wave.")
-color downStrongColor = input.color(#FF5252, "Down Wave (strong)", group = "Colours", tooltip = "Current wave volume is greater than the previous wave.")
-color downWeakColor = input.color(#800000, "Down Wave (weak)", group = "Colours", tooltip = "Current wave volume is less than or equal to the previous wave.")
+color upWithTrendColor = input.color(#26A69A, "Up Wave (with trend)", group = "Colours", tooltip = "Up-wave bar that closes at or above its open.")
+color upCounterColor = input.color(#00695C, "Up Wave (counter)", group = "Colours", tooltip = "Up-wave bar that closes below its open.")
+color downWithTrendColor = input.color(#EF5350, "Down Wave (with trend)", group = "Colours", tooltip = "Down-wave bar that closes at or below its open.")
+color downCounterColor = input.color(#800000, "Down Wave (counter)", group = "Colours", tooltip = "Down-wave bar that closes above its open.")
 
 bool useClose = pricesource == "Close"
 bool useOpenClose = pricesource == "Open / Close" or useClose
@@ -34,15 +33,7 @@ currclose := hi > prevhigh ? hi : lo < prevlow ? lo : prevclose
 
 int direction = na
 direction := currclose > prevclose ? 1 : currclose < prevclose ? -1 : nz(direction[1])
-bool directionHasChanged = ta.change(direction) != 0
 
-float vol = nz(useTrueRange == "Always" or (useTrueRange == "Auto" and na(volume)) ? ta.tr : volume)
-float waveVol = 0.0
-waveVol := directionHasChanged ? vol : nz(waveVol[1]) + vol
-
-float prevWaveVol = 0.0
-prevWaveVol := directionHasChanged ? nz(waveVol[1]) : nz(prevWaveVol[1])
-
-bool isStrong = waveVol > prevWaveVol
-color waveColor = direction > 0 ? (isStrong ? upStrongColor : upWeakColor) : direction < 0 ? (isStrong ? downStrongColor : downWeakColor) : na
+bool bullBar = close >= open
+color waveColor = direction > 0 ? (bullBar ? upWithTrendColor : upCounterColor) : direction < 0 ? (bullBar ? downCounterColor : downWithTrendColor) : na
 barcolor(waveColor, title = "Wave Color")

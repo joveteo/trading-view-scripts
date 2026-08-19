@@ -79,11 +79,11 @@ An implementation of the Larry Williams VixFix indicator for identifying market 
 
 - **Script:** [`weis-wave-volume-indicator-script`](https://github.com/joveteo/trading-view-scripts/tree/main/Weis%20Wave%20Volume/weis-wave-volume-indicator-script)
 - **Description:**
-Recolors native candlesticks on the main chart by Weis wave direction and volume strength (four colours).
-  - Bright green / dark green up-waves and bright red / dark red down-waves
-  - Strong vs weak colour from current wave volume versus the previous wave
+Recolors native candlesticks on the main chart by Weis wave direction (four colours).
+  - Bright teal / dark teal on up-waves and bright red / maroon on down-waves
+  - Darker shade when the candle closes against the wave
   - Renko assignment via ATR, Traditional, or Part of Price
-  - Overlay only — no separate volume pane
+  - Overlay only — no separate volume pane, no drawn-over candle series
 
 
 
