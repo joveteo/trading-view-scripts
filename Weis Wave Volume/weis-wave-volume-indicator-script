@@ -1,0 +1,35 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// Source https://github.com/joveteo/trading-view-scripts/tree/main/Weis%20Wave%20Volume/weis-wave-volume-indicator-script
+// © iLanat8
+//@version=6
+indicator("Weis Wave Volume", shorttitle = "WWV", overlay = true)
+
+string methodtype = input.string("ATR", "Renko Assignment Method", options = ["ATR", "Traditional", "Part of Price"])
+float methodvalue = input.float(14.0, "Value", minval = 0)
+string pricesource = input.string("Close", "Price Source", options = ["Close", "Open / Close", "High / Low"])
+color upColor = input.color(color.green, "Up Wave Color")
+color downColor = input.color(color.red, "Down Wave Color")
+
+bool useClose = pricesource == "Close"
+bool useOpenClose = pricesource == "Open / Close" or useClose
+
+float brickSize = methodvalue
+if methodtype == "ATR"
+    brickSize := ta.atr(int(math.round(methodvalue)))
+else if methodtype == "Part of Price"
+    brickSize := close / methodvalue
+
+float op = useClose ? close : open
+float hi = useOpenClose ? (close >= op ? close : op) : high
+float lo = useOpenClose ? (close <= op ? close : op) : low
+
+float currclose = na
+float prevclose = nz(currclose[1])
+float prevhigh = prevclose + brickSize
+float prevlow = prevclose - brickSize
+currclose := hi > prevhigh ? hi : lo < prevlow ? lo : prevclose
+
+int direction = na
+direction := currclose > prevclose ? 1 : currclose < prevclose ? -1 : nz(direction[1])
+
+barcolor(direction > 0 ? upColor : direction < 0 ? downColor : na)
