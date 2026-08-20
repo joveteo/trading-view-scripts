@@ -19,7 +19,7 @@ length3 = input.int(title="Length 3", defval=132, minval=1, maxval=500, tooltip=
 
 // Weis Wyckoff Configuration
 string methodtype = input.string("ATR", "Renko Assignment Method", options = ["ATR", "Traditional", "Part of Price"], group = "Weis Method", tooltip = "How the reversal brick size is measured. ATR uses recent volatility. Traditional uses a fixed price amount. Part of Price uses close divided by Value.")
-float methodvalue = input.float(14.0, "Value", minval = 0, group = "Weis Method", tooltip = "ATR length when the method is ATR. Fixed brick size when Traditional. Divisor of close when Part of Price.")
+float methodvalue = input.float(14.0, "Value", minval = 0.000001, group = "Weis Method", tooltip = "ATR length when the method is ATR. Fixed brick size when Traditional. Divisor of close when Part of Price.")
 string pricesource = input.string("Close", "Price Source", options = ["Close", "Open / Close", "High / Low"], group = "Weis Method", tooltip = "Prices used to detect a one-brick reversal. Close uses close only. Open / Close uses the bar’s open and close. High / Low uses the full range.")
 string useTrueRange = input.string("Auto", "Use True Range instead of Volume", options = ["Always", "Auto", "Never"], group = "Weis Volume", tooltip = "Always sums true range. Auto uses true range only when volume is unavailable. Never uses volume.")
 bool isOscillating = input.bool(true, "Oscillating", group = "Weis Volume", tooltip = "When enabled, down-waves plot below the Weis zero line and up-waves plot above it. When disabled, all waves plot above the Weis zero line.")
