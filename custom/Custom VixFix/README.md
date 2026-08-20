@@ -1,25 +1,36 @@
 # Custom VixFix
 
-Custom [Larry Williams VixFix](../../Larry%20Williams%20VixFix/README.md). The published indicator plots buy and sell deviation from recent highs and lows. This version adds a statistics table that scores signals after a chosen trade duration.
+Custom [Larry Williams VixFix](../../Larry%20Williams%20VixFix/README.md) pane combining three buy lookbacks, Weis Wyckoff wave volume, and `TVC:VIX`.
 
 ## What was customised
 
-- Win/loss statistics table after a configurable trade duration.
-- Hierarchical signal counting so a longer lookback is not also counted as a shorter one.
+- Keeps only the three green VixFix buy plots; inverse sell plots and trade statistics are omitted.
+- Shades the background green while a VixFix value is below zero. The 132-bar lookback has the brightest shade, followed by 66 and 22.
+- Adds Weis wave-volume columns while retaining the standalone Weis indicator’s method, price-source, volume, oscillation, and normalization settings.
+- Adds the `TVC:VIX` close as an orange line.
 
-Buy values go negative when price stretches below recent lows. Sell values go positive when price stretches above recent highs. The longest lookback that triggers wins, so a 132-day signal is not also counted as 66 or 22.
+The pane uses fixed display bands:
 
-The indicator reprints. Act after the bar closes.
+- VixFix: -100 to 100, with zero at 0
+- Weis: 100 to 300, with zero at 200
+- VIX: 300 to 400
+
+VixFix and VIX values are clipped to their bands. Weis uses a fixed divisor before it is offset and clipped. A fixed divisor preserves the original bars’ relative proportions until a column reaches a boundary; adjust it per instrument so clipping is uncommon.
 
 ## Inputs
 
 | Parameter | Default | Notes |
 |-----------|---------|-------|
 | Length 1 / 2 / 3 | 22 / 66 / 132 | About one, three, and six months of trading days |
-| Show Statistics Table | true | Win/loss counts after the trade duration |
-| Trade Duration (Days) | 30 | Bars to wait before scoring a signal |
+| Renko Assignment Method | ATR | ATR, fixed-price, or part-of-price Weis reversal assignment |
+| Value | 14 | ATR length, fixed brick size, or price divisor, depending on the method |
+| Price Source | Close | Close, open/close, or high/low Weis reversal source |
+| Use True Range instead of Volume | Auto | Uses true range when configured or when volume is unavailable |
+| Oscillating | true | Places down-wave columns below the Weis zero line |
+| Normalize | false | Shows average rather than cumulative wave volume |
+| Display Divisor | 1,000,000 | Scales Weis columns to fit their display band |
 
-Stocks often use 22/66/132 with a 30-day duration. Shorter lookbacks suit faster markets.
+The three VixFix lengths are lookbacks on the chart timeframe, not separate requested timeframes. The indicator recalculates on an open bar; evaluate signals after the bar closes.
 
 ## Citations
 
@@ -27,5 +38,6 @@ Stocks often use 22/66/132 with a 30-day duration. Shorter lookbacks suit faster
 |--------|----------|------|
 | Larry Williams VixFix | [`larry-williams-vixfix`](../../Larry%20Williams%20VixFix/larry-williams-vixfix) | Base indicator in this repository that this script is adapted from |
 | Williams’ VixFix | Williams, L. [VixFix](https://www.ireallytrade.com/newsletters/VIXFix.pdf). | Original published description of the method |
+| Weis Wyckoff Method | [`weis-wyckoff-method`](../../Weis%20Wyckoff%20Method/weis-wyckoff-method) | Source of the integrated wave-volume calculations and configuration |
 
 See [Installation](../../README.md#installation) and [License](../../README.md#license) in the repository readme. The legal disclaimer is in [DISCLAIMER.md](../../DISCLAIMER.md).
