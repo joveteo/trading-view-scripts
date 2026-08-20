@@ -1,6 +1,6 @@
 # TradingView Scripts
 
-Pine Script indicators used in my charting workflow. Each published indicator folder holds the script and a readme. Personal customisations live in [custom/](custom/). Installation, license, and the legal disclaimer are on this page.
+Pine Script indicators used in my charting workflow. Each published indicator folder holds the script and a README. Personally customised scripts are in [custom/](custom/). Installation, license, and the legal disclaimer are at the bottom of the page.
 
 ## Indicators
 

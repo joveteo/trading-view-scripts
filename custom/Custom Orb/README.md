@@ -10,8 +10,6 @@ Custom opening range breakout. A typical ORB drawing marks the high and low of t
 - Session outcome uses a points system, first-breakout priority, and a statistics table.
 - Signal arrows can follow No Bias or Daily Bias; bias does not change scoring.
 
-![Opening Range Breakout on SPY](/media/opening-range-breakout-spy-sample.png)
-
 By default the range starts at Market Hours and lasts for the Opening Range Period (60 minutes). Custom Range replaces that with an explicit session window. The range and the breakout cutoff must sit inside Market Hours.
 
 **No Bias** fires one arrow per direction on the first one-minute close beyond ORH or ORL. **Daily Bias** may wait until an extended target is reached.
@@ -55,5 +53,11 @@ On charts above one minute, use Once Per Bar so the alert can fire on the first 
 | Show Statistics Table / Show Backtest | true | Table and backtest columns |
 
 US cash equities typically use 60 minutes, `America/New_York`, and 0930–1600. Forex and futures usually need Custom Range and the matching timezone.
+
+## Citations
+
+| Source | Citation | Role |
+|--------|----------|------|
+| ORB Algo | [Flux Charts ORB Algo](https://www.tradingview.com/script/UQxtKcrL-ORB-Algo-Flux-Charts/) | Implementation this script is adapted from |
 
 See [Installation](../../README.md#installation) and [License](../../README.md#license) in the repository readme. The legal disclaimer is in [DISCLAIMER.md](../../DISCLAIMER.md).

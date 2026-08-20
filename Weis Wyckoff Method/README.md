@@ -1,6 +1,6 @@
 # Weis Wyckoff Method
 
-Plots cumulative volume for each directional price wave in a separate pane.
+[Published on TradingView](https://www.tradingview.com/script/tZZMmy1P-Weis-Wyckoff-Method/). Plots cumulative volume for each directional price wave in a separate pane.
 
 The construction comes from David H. Weis, who adapted Richard D. Wyckoff’s wave-chart teaching for modern markets. Weis did not publish a closed-form equation. He described a method: split price into alternating up and down swings, then sum volume inside each swing so effort can be compared with result, rather than with clock time.
 
