@@ -4,7 +4,7 @@ Combined SuperTrend and Weinstein stage-analysis overlay. SuperTrend supplies AT
 
 ## What was customised
 
-- SuperTrend calculations produce buy and sell labels without plotting a connecting trend line.
+- Separate green buy-side and red sell-side SuperTrend lines stop at each direction change instead of connecting across it.
 - Only the Weinstein stage moving average is plotted.
 - Current Weinstein stage in the Data Window and status line.
 - Optional bar colouring by SuperTrend direction or Weinstein stage.

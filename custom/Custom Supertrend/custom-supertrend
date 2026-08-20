@@ -109,6 +109,10 @@ stageTitle = switch stageId
     => "Unconfirmed"
 
 // ── Plot ────────────────────────────────────────────────────────────────────
+buyLine = direction == 1 ? finalLower : na
+sellLine = direction == -1 ? finalUpper : na
+plot(buyLine, "SuperTrend Buy Line", color=color.green, style=plot.style_linebr, linewidth=2)
+plot(sellLine, "SuperTrend Sell Line", color=color.red, style=plot.style_linebr, linewidth=2)
 plot(showStageMa ? stageMa : na, "Weinstein Stage MA", color=stageMaColor, linewidth=stageMaWidth)
 
 // Buy / Sell markers
