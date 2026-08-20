@@ -25,6 +25,7 @@ Stocks often use 22/66/132 with a 30-day duration. Shorter lookbacks suit faster
 
 | Source | Citation | Role |
 |--------|----------|------|
+| Larry Williams VixFix | [`larry-williams-vixfix`](../../Larry%20Williams%20VixFix/larry-williams-vixfix) | Base indicator in this repository that this script is adapted from |
 | Williams’ VixFix | Williams, L. [VixFix](https://www.ireallytrade.com/newsletters/VIXFix.pdf). | Original published description of the method |
 
 See [Installation](../../README.md#installation) and [License](../../README.md#license) in the repository readme. The legal disclaimer is in [DISCLAIMER.md](../../DISCLAIMER.md).

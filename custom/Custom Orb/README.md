@@ -54,4 +54,10 @@ On charts above one minute, use Once Per Bar so the alert can fire on the first 
 
 US cash equities typically use 60 minutes, `America/New_York`, and 0930–1600. Forex and futures usually need Custom Range and the matching timezone.
 
+## Citations
+
+| Source | Citation | Role |
+|--------|----------|------|
+| ORB Algo | [Flux Charts ORB Algo](https://www.tradingview.com/script/UQxtKcrL-ORB-Algo-Flux-Charts/) | Implementation this script is adapted from |
+
 See [Installation](../../README.md#installation) and [License](../../README.md#license) in the repository readme. The legal disclaimer is in [DISCLAIMER.md](../../DISCLAIMER.md).

@@ -11,4 +11,10 @@ Custom SuperTrend overlay. A standard SuperTrend is an ATR trailing line that fl
 
 ATR period, multiplier, source, SMA length, and table position are inputs.
 
+## Citations
+
+| Source | Citation | Role |
+|--------|----------|------|
+| SuperTrend | [TradingView SuperTrend](https://www.tradingview.com/support/solutions/43000634738-supertrend/) | Implementation this script is adapted from |
+
 See [Installation](../../README.md#installation) and [License](../../README.md#license) in the repository readme. The legal disclaimer is in [DISCLAIMER.md](../../DISCLAIMER.md).
