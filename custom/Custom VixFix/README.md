@@ -21,4 +21,10 @@ The indicator reprints. Act after the bar closes.
 
 Stocks often use 22/66/132 with a 30-day duration. Shorter lookbacks suit faster markets.
 
+## Citations
+
+| Source | Citation | Role |
+|--------|----------|------|
+| Williams’ VixFix | Williams, L. [VixFix](https://www.ireallytrade.com/newsletters/VIXFix.pdf). | Original published description of the method |
+
 See [Installation](../../README.md#installation) and [License](../../README.md#license) in the repository readme. The legal disclaimer is in [DISCLAIMER.md](../../DISCLAIMER.md).

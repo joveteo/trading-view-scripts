@@ -1,6 +1,6 @@
 # Weinstein Stage Analysis
 
-Maps Stan Weinstein’s four-stage cycle onto the chart by painting each candle’s body, border, and wick. Stages are calculated on a higher timeframe (weekly by default) from a 30-period moving average and a proximity band, then mapped onto the current chart.
+[Published on TradingView](https://www.tradingview.com/script/FliTL63W-Weinstein-Stage-Analysis/). Maps Stan Weinstein’s four-stage cycle onto the chart by painting each candle’s body, border, and wick. Stages are calculated on a higher timeframe (weekly by default) from a 30-period moving average and a proximity band, then mapped onto the current chart.
 
 This script is an interpretation of Weinstein’s method, adapted from the [TrendSpider Weinstein Stage Analysis](https://charts.trendspider.com/shared/679813ca6550e0000970233f) implementation. It will not match every discretionary rule from the original work.
 
@@ -34,5 +34,6 @@ Use a chart timeframe at or below the stage timeframe. Bars that share a higher-
 |--------|----------|------|
 | *Secrets for Profiting in Bull and Bear Markets* | Weinstein, S. (1988). *Secrets for Profiting in Bull and Bear Markets*. Dow Jones-Irwin. | Primary published description of the four-stage method |
 | *The Professional Tape Reader* | *The Professional Tape Reader* newsletter (1972–2000). | Newsletter in which Weinstein developed and taught the method |
+| TrendSpider Weinstein Stage Analysis | [TrendSpider shared chart](https://charts.trendspider.com/shared/679813ca6550e0000970233f) | Implementation this script is adapted from |
 
 See [Installation](../README.md#installation) and [License](../README.md#license) in the repository readme. The legal disclaimer is in [DISCLAIMER.md](../DISCLAIMER.md).
