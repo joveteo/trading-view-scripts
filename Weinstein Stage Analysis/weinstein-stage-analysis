@@ -11,10 +11,12 @@ indicator("Weinstein Stage Analysis", shorttitle = "Weinstein Stages", overlay =
 // INPUTS
 // =============================================================================
 
-string htf = input.timeframe("W", "Stage Timeframe", group = "Moving Average", tooltip = "Weinstein analysis is calculated on this timeframe and mapped onto the chart. Weekly is the classic setting.")
-int maLength = input.int(30, "MA Length", minval = 1, group = "Moving Average", tooltip = "Lookback for the stage moving average. Weinstein's original method uses a 30-week SMA.")
+string htf = input.timeframe("W", "Stage Timeframe", group = "Moving Average", tooltip = "Weinstein analysis is calculated on this timeframe and mapped onto the chart. Weekly is the classic setting. Ignored when Use chart timeframe is enabled. Same as chart (or a matching 1-minute selection) also calculates on the chart's bars.")
+int maLength = input.int(30, "MA Length", minval = 1, group = "Moving Average", tooltip = "Lookback for the stage moving average. Weinstein's original method uses a 30-week SMA. On a 1-minute chart with Use chart timeframe, 30 is a 30-minute average.")
 string maType = input.string("SMA", "MA Type", options = ["SMA", "EMA", "WMA", "RMA", "VWMA", "HMA"], group = "Moving Average", tooltip = "Moving average type used for stage detection.")
-float withinRangePercent = input.float(5.0, "Within Range %", minval = 0.0, maxval = 25.0, step = 0.5, group = "Moving Average", tooltip = "Percentage band around the MA. Stage 2 requires the candle body above MA + this band; Stage 4 requires the body below MA − this band.")
+float withinRangePercent = input.float(5.0, "Within Range %", minval = 0.0, maxval = 25.0, step = 0.05, group = "Moving Average", tooltip = "Percentage band around the MA. Stage 2 requires the candle body above MA + this band; Stage 4 requires the body below MA − this band. The 5% default is calibrated for weekly bars.")
+bool useChartTf = input.bool(false, "Use chart timeframe", group = "Moving Average", tooltip = "Calculate stages on the chart's own bars. Enable this on a 1-minute chart to run a 30-period MA stage cycle on 1-minute candles. When off, stages use Stage Timeframe (weekly by default) and are mapped onto the chart.")
+bool scaleIntradayRange = input.bool(true, "Scale range to timeframe", group = "Moving Average", tooltip = "On intraday stage timeframes, shrink the Within Range % by sqrt(stage timeframe / weekly). Without this, a 5% band is too wide for 1-minute bars and Stage 2/4 almost never confirm. Weekly and daily stages keep the entered percentage.")
 
 color stage1Color = input.color(#90EE90, "Stage 1 Color", group = "Stage Colours", tooltip = "Basing / accumulation after a decline. Price is no longer confirmed in Stage 4.")
 color stage2Color = input.color(#008000, "Stage 2 Color", group = "Stage Colours", tooltip = "Advancing trend. Candle body is above a rising MA by more than the range band.")
@@ -22,7 +24,7 @@ color stage3Color = input.color(#FFA500, "Stage 3 Color", group = "Stage Colours
 color stage4Color = input.color(#FF0000, "Stage 4 Color", group = "Stage Colours", tooltip = "Declining trend. Candle body is below a falling MA by more than the range band.")
 
 bool colorBars = input.bool(true, "Colour Bars", group = "Display", tooltip = "Paint each candle's body, border, and wick with the stage colour. The script draws these candles in front of the chart symbol so the original green/red edges do not show through.")
-bool showMa = input.bool(true, "Show MA", group = "Display", tooltip = "Plot the stage moving average from the selected timeframe.")
+bool showMa = input.bool(true, "Show MA", group = "Display", tooltip = "Plot the stage moving average from the stage timeframe.")
 color maColor = input.color(#FFFFFF, "MA Color", group = "Display", tooltip = "Colour of the plotted stage moving average.")
 int maWidth = input.int(2, "MA Width", minval = 1, maxval = 5, group = "Display")
 bool showLabels = input.bool(false, "Show Stage Labels", group = "Display", tooltip = "Mark the first bar of each stage change with a label.")
@@ -49,9 +51,19 @@ maValue(string type, float src, int length) =>
 // Stage 3: after a confirmed Stage 2 until Stage 4
 // Stage 1: after a confirmed Stage 4 until Stage 2
 
+// Same-timeframe (and lower-than-chart) requests are evaluated on the chart so 1-minute stages do not go through request.security.
+string requestedTf = htf == "" ? timeframe.period : htf
+bool onChart = useChartTf or requestedTf == timeframe.period or timeframe.in_seconds(requestedTf) < timeframe.in_seconds()
+string stageTf = onChart ? timeframe.period : requestedTf
+
+rangeScale() =>
+    int tfSec = timeframe.in_seconds(stageTf)
+    float scale = scaleIntradayRange and tfSec < timeframe.in_seconds("D") ? math.sqrt(tfSec / float(timeframe.in_seconds("W"))) : 1.0
+    scale
+
 calcWeinstein() =>
     float ma = maValue(maType, close, maLength)
-    float band = ma * withinRangePercent / 100.0
+    float band = math.max(ma * withinRangePercent * rangeScale() / 100.0, syminfo.mintick)
     float bodyLow = math.min(open, close)
     float bodyHigh = math.max(open, close)
     var string trend = ""
@@ -72,7 +84,11 @@ calcWeinstein() =>
 
     [ma, stage]
 
-[stageMa, stageId] = request.security(syminfo.tickerid, htf, calcWeinstein(), gaps = barmerge.gaps_off, lookahead = barmerge.lookahead_on)
+[chartMa, chartStage] = calcWeinstein()
+[htfMa, htfStage] = request.security(syminfo.tickerid, stageTf, calcWeinstein(), gaps = barmerge.gaps_off, lookahead = barmerge.lookahead_on)
+
+float stageMa = onChart ? chartMa : htfMa
+int stageId = onChart ? chartStage : htfStage
 
 color stageColor = switch stageId
     1 => stage1Color
@@ -102,6 +118,7 @@ if showLabels and stageChanged and not na(stageColor)
     label.new(bar_index, high, "Stage " + stageTitle, style = label.style_label_down, color = stageColor, textcolor = labelText, size = size.small)
 
 plot(stageId, title = "Stage", display = display.data_window + display.status_line)
+plot(withinRangePercent * rangeScale(), title = "Effective Range %", display = display.data_window)
 
 alertcondition(stageId == 1 and stageId[1] != 1, title = "Stage 1", message = "Weinstein Stage 1 (basing)")
 alertcondition(stageId == 2 and stageId[1] != 2, title = "Stage 2", message = "Weinstein Stage 2 (advancing)")

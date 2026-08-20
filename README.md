@@ -20,7 +20,7 @@ Measures multi-timeframe price deviation from recent highs and lows to mark pote
 
 - **Script:** [`weinstein-stage-analysis`](Weinstein%20Stage%20Analysis/weinstein-stage-analysis)
 
-Maps Stan Weinstein’s four-stage cycle onto the chart by painting candles from a higher-timeframe moving average.
+Maps Stan Weinstein’s four-stage cycle onto the chart by painting candles from a moving average. Weekly by default; can run on the chart timeframe, including 1-minute.
 
 ### [Weis Wyckoff Method](Weis%20Wyckoff%20Method/README.md)
 
