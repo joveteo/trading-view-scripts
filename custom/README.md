@@ -16,7 +16,7 @@ Opening range breakout scored from confirmed one-minute bars, with VIX and width
 
 - **Script:** [`custom-supertrend`](Custom%20Supertrend/custom-supertrend)
 
-SuperTrend with an SMA overlay and a table of time spent in green versus red.
+SuperTrend signals and trend statistics combined with higher-timeframe Weinstein stage analysis.
 
 ### [Custom VixFix](Custom%20VixFix/README.md)
 

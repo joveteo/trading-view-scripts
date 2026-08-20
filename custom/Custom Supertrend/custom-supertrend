@@ -1,19 +1,45 @@
 // This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
 // Citation TradingView SuperTrend https://www.tradingview.com/support/solutions/43000634738-supertrend/
+// Citation Weinstein, S. (1988). Secrets for Profiting in Bull and Bear Markets. Dow Jones-Irwin.
+// Citation TrendSpider Weinstein Stage Analysis (https://charts.trendspider.com/shared/679813ca6550e0000970233f)
 // Source https://github.com/joveteo/trading-view-scripts/tree/main/custom/Custom%20Supertrend/custom-supertrend
 // © iLanat8
 //@version=6
-indicator("Custom Supertrend", overlay=true, max_bars_back=5000)
+indicator("Custom Supertrend + Weinstein Stages", shorttitle="Supertrend + Stages", overlay=true, behind_chart=false, max_bars_back=5000, max_labels_count=500)
 
 // ── Inputs ──────────────────────────────────────────────────────────────────
-atrPeriod   = input.int(10, "ATR Period", minval=1)
-atrMult     = input.float(3.0, "ATR Multiplier", minval=0.1, step=0.1)
-src         = input.source(hl2, "Source")
-smaLength   = input.int(200, "SMA Length", minval=1)
-showLabels  = input.bool(true, "Show Buy/Sell Labels")
-showTable   = input.bool(true, "Show Green/Red % Table")
-tablePos    = input.string("Top Right", "Table Position",
-     options=["Top Left", "Top Right", "Bottom Left", "Bottom Right"])
+atrPeriod      = input.int(10, "ATR Period", minval=1, group="SuperTrend")
+atrMult        = input.float(3.0, "ATR Multiplier", minval=0.1, step=0.1, group="SuperTrend")
+src            = input.source(hl2, "Source", group="SuperTrend")
+smaLength      = input.int(200, "SMA Length", minval=1, group="SuperTrend")
+showLabels     = input.bool(true, "Show Buy/Sell Labels", group="SuperTrend Display")
+colorTrendBars = input.bool(true, "Colour Bars by SuperTrend", group="SuperTrend Display",
+     tooltip="Colours the native chart candles by SuperTrend direction. Weinstein stage candles take visual priority when both options are enabled.")
+showTable      = input.bool(true, "Show Statistics Table", group="SuperTrend Display")
+tablePos       = input.string("Top Right", "Table Position",
+     options=["Top Left", "Top Right", "Bottom Left", "Bottom Right"], group="SuperTrend Display")
+
+stageTimeframe = input.timeframe("W", "Stage Timeframe", group="Weinstein Moving Average",
+     tooltip="Weinstein analysis is calculated on this timeframe and mapped onto the chart. Weekly is the classic setting.")
+stageMaLength  = input.int(30, "MA Length", minval=1, group="Weinstein Moving Average",
+     tooltip="Weinstein's original method uses a 30-week SMA.")
+stageMaType    = input.string("SMA", "MA Type", options=["SMA", "EMA", "WMA", "RMA", "VWMA", "HMA"],
+     group="Weinstein Moving Average")
+stageBandPct   = input.float(5.0, "Within Range %", minval=0.0, maxval=25.0, step=0.5,
+     group="Weinstein Moving Average",
+     tooltip="Stage 2 requires the candle body above MA plus this band; Stage 4 requires the body below MA minus this band.")
+
+stage1Color = input.color(#90EE90, "Stage 1 Color", group="Weinstein Colours")
+stage2Color = input.color(#008000, "Stage 2 Color", group="Weinstein Colours")
+stage3Color = input.color(#FFA500, "Stage 3 Color", group="Weinstein Colours")
+stage4Color = input.color(#FF0000, "Stage 4 Color", group="Weinstein Colours")
+
+colorStageBars = input.bool(true, "Colour Bars by Stage", group="Weinstein Display",
+     tooltip="Draws candle bodies, borders, and wicks using the current Weinstein stage colour.")
+showStageMa    = input.bool(true, "Show Stage MA", group="Weinstein Display")
+stageMaColor   = input.color(#FFFFFF, "Stage MA Color", group="Weinstein Display")
+stageMaWidth   = input.int(2, "Stage MA Width", minval=1, maxval=5, group="Weinstein Display")
+showStageLabels = input.bool(false, "Show Stage Labels", group="Weinstein Display")
 
 // ── SuperTrend calculation ──────────────────────────────────────────────────
 atr = ta.atr(atrPeriod)
@@ -40,10 +66,62 @@ superTrend = direction == 1 ? finalLower : finalUpper
 // ── SMA ─────────────────────────────────────────────────────────────────────
 sma = ta.sma(close, smaLength)
 
+// ── Weinstein stage analysis ────────────────────────────────────────────────
+maValue(string maType, float maSource, int length) =>
+    switch maType
+        "SMA" => ta.sma(maSource, length)
+        "EMA" => ta.ema(maSource, length)
+        "WMA" => ta.wma(maSource, length)
+        "RMA" => ta.rma(maSource, length)
+        "VWMA" => ta.vwma(maSource, length)
+        "HMA" => ta.hma(maSource, length)
+        => ta.sma(maSource, length)
+
+calcWeinstein() =>
+    float ma = maValue(stageMaType, close, stageMaLength)
+    float band = ma * stageBandPct / 100.0
+    float bodyLow = math.min(open, close)
+    float bodyHigh = math.max(open, close)
+    var string trend = ""
+    int stage = 0
+
+    if bodyLow > ma + band and ma[1] < ma
+        trend := "upward"
+        stage := 2
+    else if bodyHigh < ma - band and ma[1] > ma
+        trend := "downward"
+        stage := 4
+    else if trend == "upward"
+        stage := 3
+    else if trend == "downward"
+        stage := 1
+    else
+        stage := nz(stage[1], 0)
+
+    [ma, stage]
+
+[stageMa, stageId] = request.security(syminfo.tickerid, stageTimeframe, calcWeinstein(),
+     gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on)
+
+stageColor = switch stageId
+    1 => stage1Color
+    2 => stage2Color
+    3 => stage3Color
+    4 => stage4Color
+    => na
+
+stageTitle = switch stageId
+    1 => "1 · Basing"
+    2 => "2 · Advancing"
+    3 => "3 · Distribution"
+    4 => "4 · Declining"
+    => "Unconfirmed"
+
 // ── Plot ────────────────────────────────────────────────────────────────────
 stColor = direction == 1 ? color.new(color.green, 0) : color.new(color.red, 0)
 plot(superTrend, "SuperTrend", color=stColor, style=plot.style_linebr, linewidth=2)
-plot(sma, "SMA", color=color.new(color.orange, 0), linewidth=2)
+plot(sma, "SuperTrend SMA", color=color.new(color.orange, 0), linewidth=2)
+plot(showStageMa ? stageMa : na, "Weinstein Stage MA", color=stageMaColor, linewidth=stageMaWidth)
 
 bullFill = direction == 1 ? color.new(color.green, 90) : na
 bearFill = direction == -1 ? color.new(color.red, 90) : na
@@ -63,10 +141,25 @@ plotshape(showLabels and buySignal,  title="Buy",  style=shape.labelup,
 plotshape(showLabels and sellSignal, title="Sell", style=shape.labeldown,
      location=location.abovebar, color=color.red,   text="Sell", textcolor=color.white, size=size.small)
 
-barcolor(direction == 1 ? color.new(color.green, 85) : color.new(color.red, 85))
+barcolor(colorTrendBars ? (direction == 1 ? color.new(color.green, 85) : color.new(color.red, 85)) : na)
+
+paintStageBars = colorStageBars and not na(stageColor)
+paintStageColor = paintStageBars ? color.new(stageColor, 0) : na
+plotcandle(paintStageBars ? open : na, high, low, close, title="Weinstein Stage Candles",
+     color=paintStageColor, wickcolor=paintStageColor, bordercolor=paintStageColor)
+
+stageChanged = stageId != stageId[1] and stageId > 0
+if showStageLabels and stageChanged and not na(stageColor)
+    stageTextColor = stageId == 1 ? color.black : color.white
+    label.new(bar_index, high, "Stage " + stageTitle, style=label.style_label_down,
+         color=stageColor, textcolor=stageTextColor, size=size.small)
 
 alertcondition(buySignal,  title="SuperTrend Buy",  message="SuperTrend flipped bullish (green)")
 alertcondition(sellSignal, title="SuperTrend Sell", message="SuperTrend flipped bearish (red)")
+alertcondition(stageId == 1 and stageId[1] != 1, title="Weinstein Stage 1", message="Weinstein Stage 1 (basing)")
+alertcondition(stageId == 2 and stageId[1] != 2, title="Weinstein Stage 2", message="Weinstein Stage 2 (advancing)")
+alertcondition(stageId == 3 and stageId[1] != 3, title="Weinstein Stage 3", message="Weinstein Stage 3 (distribution)")
+alertcondition(stageId == 4 and stageId[1] != 4, title="Weinstein Stage 4", message="Weinstein Stage 4 (declining)")
 
 // ── Green / Red time % ──────────────────────────────────────────────────────
 // Counts bars on the chart (from leftmost loaded bar to current)
@@ -96,11 +189,11 @@ posMap = tablePos == "Top Left"     ? position.top_left     :
          tablePos == "Bottom Left"  ? position.bottom_left  :
                                       position.bottom_right
 
-var table stats = table.new(posMap, 2, 5, bgcolor=color.new(#1e222d, 10),
+var table stats = table.new(posMap, 2, 6, bgcolor=color.new(#1e222d, 10),
      border_width=1, border_color=color.new(color.gray, 50))
 
 if showTable and barstate.islast
-    table.cell(stats, 0, 0, "SuperTrend Stats", text_color=color.white,
+    table.cell(stats, 0, 0, "SuperTrend + Weinstein", text_color=color.white,
          text_size=size.small, bgcolor=color.new(#2962ff, 30))
     table.merge_cells(stats, 0, 0, 1, 0)
 
@@ -121,6 +214,11 @@ if showTable and barstate.islast
     table.cell(stats, 1, 4, curLabel + " × " + str.tostring(streak),
          text_color=curColor, text_size=size.tiny)
 
-// Also expose % as plots (Data Window / strategy use)
+    table.cell(stats, 0, 5, "Weinstein", text_color=color.gray, text_size=size.tiny)
+    table.cell(stats, 1, 5, "Stage " + stageTitle,
+         text_color=na(stageColor) ? color.gray : stageColor, text_size=size.tiny)
+
+// Also expose values as plots (Data Window / strategy use)
 plot(greenPct, "Green %", display=display.data_window)
 plot(redPct,   "Red %",   display=display.data_window)
+plot(stageId, "Weinstein Stage", display=display.data_window + display.status_line)
