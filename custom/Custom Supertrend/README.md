@@ -4,9 +4,9 @@ Combined SuperTrend and Weinstein stage-analysis overlay. SuperTrend supplies AT
 
 ## What was customised
 
-- SMA overlay on the same pane (length 200 by default).
-- Table of the share of loaded bars spent in green versus red, plus the current streak.
-- Current Weinstein stage in the statistics table and Data Window.
+- SuperTrend calculations produce buy and sell labels without plotting a connecting trend line.
+- Only the Weinstein stage moving average is plotted.
+- Current Weinstein stage in the Data Window and status line.
 - Optional bar colouring by SuperTrend direction or Weinstein stage.
 - Buy and sell labels when the SuperTrend direction flips.
 - Optional labels and alerts when the Weinstein stage changes.
@@ -26,7 +26,7 @@ When both candle-colouring options are enabled, the fully drawn Weinstein stage 
 
 ## Inputs
 
-SuperTrend settings include the ATR period, multiplier, source, SMA length, labels, candle colouring, statistics table, and table position. Weinstein settings include the stage timeframe, MA length and type, confirmation-band percentage, stage colours, candle colouring, MA display, and stage labels.
+SuperTrend settings include the ATR period, multiplier, source, labels, and candle colouring. Weinstein settings include the stage timeframe, MA length and type, confirmation-band percentage, stage colours, candle colouring, MA display, and stage labels.
 
 ## Citations
 
