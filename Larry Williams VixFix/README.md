@@ -6,6 +6,8 @@ The indicator reprints. Act after the bar closes.
 
 Buy values go negative when price stretches below recent lows. Sell values go positive when price stretches above recent highs.
 
+A customisation with a statistics table is in [Custom VixFix](../custom/Custom%20VixFix/README.md).
+
 ## Inputs
 
 | Parameter | Default | Notes |
