@@ -24,7 +24,7 @@ string pricesource = input.string("Close", "Price Source", options = ["Close", "
 string useTrueRange = input.string("Auto", "Use True Range instead of Volume", options = ["Always", "Auto", "Never"], group = "Weis Volume", tooltip = "Always sums true range. Auto uses true range only when volume is unavailable. Never uses volume.")
 bool isOscillating = input.bool(true, "Oscillating", group = "Weis Volume", tooltip = "When enabled, down-waves plot below the Weis zero line and up-waves plot above it. When disabled, all waves plot above the Weis zero line.")
 bool normalize = input.bool(false, "Normalize", group = "Weis Volume", tooltip = "When enabled, the column is average volume (or true range) per bar in the current wave instead of the wave’s cumulative total.")
-float weisDivisor = input.float(1000000.0, "Display Divisor", minval = 0.000001, group = "Weis Display", tooltip = "Divides Weis wave volume before plotting it. Adjust per instrument so most columns fit between 100 and 300. Values outside that range are clipped.")
+float weisDivisor = input.float(15000000.0, "Display Divisor", minval = 0.000001, group = "Weis Display", tooltip = "Divides Weis wave volume before plotting it. Adjust per instrument so most columns fit between 100 and 300. Values outside that range are clipped.")
 
 // =============================================================================
 // CORE CALCULATIONS
@@ -71,28 +71,29 @@ float scaledWeis = math.max(-100.0, math.min(100.0, signedWeis / weisDivisor))
 
 // TVC:VIX is used instead of the delayed CBOE:VIX feed.
 float vix = request.security("TVC:VIX", timeframe.period, close)
-float scaledVix = na(vix) ? na : 300.0 + math.max(0.0, math.min(100.0, vix))
+float scaledVix = na(vix) ? na : 50.0 + math.max(0.0, math.min(50.0, vix))
 
 // =============================================================================
 // VISUAL DISPLAY & STYLING
 // =============================================================================
 
 // Reference lines for each display band
+hline(-5, "VixFix Lower Boundary", color = color.new(color.gray, 75), linewidth = 1)
 hline(0, "VixFix Zero", color = color.new(color.gray, 50), linewidth = 1)
-hline(100, "VixFix / Weis Boundary", color = color.new(color.gray, 75), linewidth = 1)
+hline(50, "VixFix / VIX Boundary", color = color.new(color.gray, 75), linewidth = 1)
+hline(100, "VIX / Weis Boundary", color = color.new(color.gray, 75), linewidth = 1)
 hline(200, "Weis Zero", color = color.new(color.gray, 50), linewidth = 1)
-hline(300, "Weis / VIX Boundary", color = color.new(color.gray, 75), linewidth = 1)
-hline(400, "VIX Upper Boundary", color = color.new(color.gray, 75), linewidth = 1)
+hline(300, "Weis Upper Boundary", color = color.new(color.gray, 75), linewidth = 1)
 
-// VixFix buy plots, clipped to their -100 to 100 band
-plot(math.max(-100.0, math.min(100.0, buy1)), title = "Buy Short (22d)", color = color.new(color.green, 60), linewidth = 1)
-plot(math.max(-100.0, math.min(100.0, buy2)), title = "Buy Medium (66d)", color = color.new(color.green, 50), linewidth = 1)
-plot(math.max(-100.0, math.min(100.0, buy3)), title = "Buy Long (132d)", color = color.new(color.green, 40), linewidth = 1)
+// VixFix buy plots, clipped to their -5 to 50 band
+plot(math.max(-5.0, math.min(50.0, buy1)), title = "Buy Short (22d)", color = color.new(color.green, 60), linewidth = 1)
+plot(math.max(-5.0, math.min(50.0, buy2)), title = "Buy Medium (66d)", color = color.new(color.green, 50), linewidth = 1)
+plot(math.max(-5.0, math.min(50.0, buy3)), title = "Buy Long (132d)", color = color.new(color.green, 40), linewidth = 1)
 
 // Weis columns occupy 100 to 300, with their zero line at 200.
 plot(200.0 + scaledWeis, style = plot.style_columns, color = directionIsUp ? color.new(color.green, 75) : color.new(color.red, 75), linewidth = 3, histbase = 200, title = "Weis Wave Volume")
 
-// VIX occupies 300 to 400 and is clipped at the upper boundary.
+// VIX occupies 50 to 100 and is clipped at the upper boundary.
 plot(scaledVix, title = "TVC:VIX", color = color.orange, linewidth = 2)
 
 // Higher lookbacks take precedence and produce brighter green shading.
@@ -101,3 +102,4 @@ bg_color = buy3 < 0 ? color.new(color.green, 65) :
            buy1 < 0 ? color.new(color.green, 85) : na
 
 bgcolor(bg_color, title = "Buy Signal Background")
+bgcolor(vix > 20 ? color.new(color.yellow, 80) : na, title = "VIX Above 20 Background")
