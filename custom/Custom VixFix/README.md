@@ -14,7 +14,7 @@ The pane uses fixed display bands:
 
 - VixFix: -5 to 50, with zero at 0
 - VIX: 50 to 100
-- Weis: 100 to 150, with zero at 125
+- Weis: 100 to 200, with zero at 150
 
 VixFix and VIX values are clipped to their bands. Weis uses a fixed divisor before it is offset and clipped. A fixed divisor preserves the original bars’ relative proportions until a column reaches a boundary; adjust it per instrument so clipping is uncommon.
 
