@@ -18,8 +18,8 @@ Opening range breakout scored from confirmed one-minute bars, with VIX and width
 
 SuperTrend with an SMA overlay and a table of time spent in green versus red.
 
-### [Custom Vix](Custom%20Vix/README.md)
+### [Custom VixFix](Custom%20VixFix/README.md)
 
-- **Script:** [`custom-vix`](Custom%20Vix/custom-vix)
+- **Script:** [`custom-vixfix`](Custom%20VixFix/custom-vixfix)
 
-Daily VIX close in its own pane, shaded when VIX is above a chosen threshold.
+Larry Williams VixFix with a statistics table that scores buy and sell signals after a chosen trade duration.

@@ -10,8 +10,6 @@ Custom opening range breakout. A typical ORB drawing marks the high and low of t
 - Session outcome uses a points system, first-breakout priority, and a statistics table.
 - Signal arrows can follow No Bias or Daily Bias; bias does not change scoring.
 
-![Opening Range Breakout on SPY](/media/opening-range-breakout-spy-sample.png)
-
 By default the range starts at Market Hours and lasts for the Opening Range Period (60 minutes). Custom Range replaces that with an explicit session window. The range and the breakout cutoff must sit inside Market Hours.
 
 **No Bias** fires one arrow per direction on the first one-minute close beyond ORH or ORL. **Daily Bias** may wait until an extended target is reached.
