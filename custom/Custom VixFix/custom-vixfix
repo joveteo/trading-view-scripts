@@ -6,7 +6,7 @@
 // © iLanat8
 //@version=6
 
-indicator(title = "Custom VixFix", shorttitle = "Custom VixFix", precision = 2)
+indicator(title = "Custom VixFix", shorttitle = "Custom VixFix", precision = 2, max_bars_back = 5000)
 
 // =============================================================================
 // INPUT PARAMETERS
@@ -24,7 +24,9 @@ string pricesource = input.string("Close", "Price Source", options = ["Close", "
 string useTrueRange = input.string("Auto", "Use True Range instead of Volume", options = ["Always", "Auto", "Never"], group = "Weis Volume", tooltip = "Always sums true range. Auto uses true range only when volume is unavailable. Never uses volume.")
 bool isOscillating = input.bool(true, "Oscillating", group = "Weis Volume", tooltip = "When enabled, down-waves plot below the Weis zero line and up-waves plot above it. When disabled, all waves plot above the Weis zero line.")
 bool normalize = input.bool(false, "Normalize", group = "Weis Volume", tooltip = "When enabled, the column is average volume (or true range) per bar in the current wave instead of the wave’s cumulative total.")
-float weisDivisor = input.float(15000000.0, "Display Divisor", minval = 0.000001, group = "Weis Display", tooltip = "Divides Weis wave volume before plotting it. Adjust per instrument so most columns fit between 100 and 200. Values outside that range are clipped.")
+bool autoFit = input.bool(true, "Auto Fit", group = "Weis Display", tooltip = "When enabled, the display divisor is taken from the 90th percentile of wave volume over the lookback so most columns fit between 100 and 200. When disabled, Display Divisor is used.")
+int fitLookback = input.int(500, "Auto-Fit Lookback", minval = 50, maxval = 5000, group = "Weis Display", tooltip = "Bars used to estimate typical wave volume when Auto Fit is enabled. A longer lookback keeps the scale more stable.")
+float weisDivisor = input.float(15000000.0, "Display Divisor", minval = 0.000001, group = "Weis Display", tooltip = "Used when Auto Fit is disabled. Divides Weis wave volume before plotting. Adjust per instrument so most columns fit between 100 and 200. Values outside that range are clipped.")
 
 // =============================================================================
 // CORE CALCULATIONS
@@ -67,7 +69,11 @@ barcount := not directionHasChanged and normalize ? nz(barcount[1]) + 1 : 1
 vol := not directionHasChanged ? nz(vol[1]) + nz(vol) : nz(vol)
 float res = barcount > 1 ? vol / barcount : vol
 float signedWeis = isOscillating and directionIsDown ? -res : res
-float scaledWeis = math.max(-50.0, math.min(50.0, signedWeis / weisDivisor))
+int fitLength = math.max(1, math.min(fitLookback, bar_index + 1))
+float typicalWeis = ta.percentile_nearest_rank(res, fitLength, 90)
+float autoDivisor = typicalWeis > 0 ? typicalWeis / 50.0 : weisDivisor
+float effectiveDivisor = autoFit ? autoDivisor : weisDivisor
+float scaledWeis = math.max(-50.0, math.min(50.0, signedWeis / effectiveDivisor))
 
 // TVC:VIX is used instead of the delayed CBOE:VIX feed.
 float vix = request.security("TVC:VIX", timeframe.period, close)
@@ -86,15 +92,15 @@ hline(150, "Weis Zero", color = color.new(color.gray, 50), linewidth = 1)
 hline(200, "Weis Upper Boundary", color = color.new(color.gray, 75), linewidth = 1)
 
 // VixFix buy plots, clipped to their -5 to 50 band
-plot(math.max(-5.0, math.min(50.0, buy1)), title = "Buy Short (22d)", color = color.new(color.green, 60), linewidth = 1)
-plot(math.max(-5.0, math.min(50.0, buy2)), title = "Buy Medium (66d)", color = color.new(color.green, 50), linewidth = 1)
-plot(math.max(-5.0, math.min(50.0, buy3)), title = "Buy Long (132d)", color = color.new(color.green, 40), linewidth = 1)
+plot(math.max(-5.0, math.min(50.0, buy1)), title = "Buy Short (22d)", color = color.new(color.green, 50), linewidth = 1)
+plot(math.max(-5.0, math.min(50.0, buy2)), title = "Buy Medium (66d)", color = color.new(color.green, 25), linewidth = 1)
+plot(math.max(-5.0, math.min(50.0, buy3)), title = "Buy Long (132d)", color = color.new(color.green, 0), linewidth = 1)
 
 // Weis columns occupy 100 to 200, with their zero line at 150.
-plot(150.0 + scaledWeis, style = plot.style_columns, color = directionIsUp ? color.new(color.green, 75) : color.new(color.red, 75), linewidth = 3, histbase = 150, title = "Weis Wave Volume")
+plot(150.0 + scaledWeis, style = plot.style_columns, color = directionIsUp ? color.new(color.green, 0) : color.new(color.red, 0), linewidth = 3, histbase = 150, title = "Weis Wave Volume")
 
 // VIX occupies 50 to 100 and is clipped at the upper boundary.
-plot(scaledVix, title = "TVC:VIX", color = color.orange, linewidth = 2)
+plot(scaledVix, title = "TVC:VIX", color = color.orange, linewidth = 1)
 
 // Higher lookbacks take precedence and produce brighter green shading.
 bg_color = buy3 < 0 ? color.new(color.green, 65) :
@@ -103,3 +109,5 @@ bg_color = buy3 < 0 ? color.new(color.green, 65) :
 
 bgcolor(bg_color, title = "Buy Signal Background")
 bgcolor(vix > 20 ? color.new(color.yellow, 80) : na, title = "VIX Above 20 Background")
+
+plot(effectiveDivisor, "Weis Display Divisor", display = display.data_window + display.status_line)

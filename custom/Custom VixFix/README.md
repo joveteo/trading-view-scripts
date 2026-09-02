@@ -16,7 +16,7 @@ The pane uses fixed display bands:
 - VIX: 50 to 100
 - Weis: 100 to 200, with zero at 150
 
-VIXFix and VIX values are clipped to their bands. Weis uses a fixed divisor before it is offset and clipped. A fixed divisor preserves the original bars’ relative proportions until a column reaches a boundary; adjust it per instrument so clipping is uncommon.
+VIXFix and VIX values are clipped to their bands. Weis is divided, offset into its band, and then clipped. Auto Fit (the default) sets that divisor from the 90th percentile of wave volume over the lookback so most columns stay inside 100 to 200. Turn Auto Fit off to use a fixed Display Divisor, which keeps relative column sizes stable until a column reaches a boundary.
 
 ## Inputs
 
@@ -29,7 +29,9 @@ VIXFix and VIX values are clipped to their bands. Weis uses a fixed divisor befo
 | Use True Range instead of Volume | Auto | Uses true range when configured or when volume is unavailable |
 | Oscillating | true | Places down-wave columns below the Weis zero line |
 | Normalise | false | Shows average rather than cumulative wave volume |
-| Display Divisor | 15,000,000 | Scales Weis columns to fit their display band |
+| Auto Fit | true | Sets the Weis display divisor from the 90th percentile of recent wave volume |
+| Auto-Fit Lookback | 500 | Bars used for that percentile when Auto Fit is enabled |
+| Display Divisor | 15,000,000 | Used when Auto Fit is off; scales Weis columns to fit their display band |
 
 The three VixFix lengths are lookbacks on the chart timeframe, not separate requested timeframes. The indicator recalculates on an open bar; evaluate signals after the bar closes.
 
