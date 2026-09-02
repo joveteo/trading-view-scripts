@@ -92,15 +92,15 @@ hline(150, "Weis Zero", color = color.new(color.gray, 50), linewidth = 1)
 hline(200, "Weis Upper Boundary", color = color.new(color.gray, 75), linewidth = 1)
 
 // VixFix buy plots, clipped to their -5 to 50 band
-plot(math.max(-5.0, math.min(50.0, buy1)), title = "Buy Short (22d)", color = color.new(color.green, 60), linewidth = 1)
-plot(math.max(-5.0, math.min(50.0, buy2)), title = "Buy Medium (66d)", color = color.new(color.green, 50), linewidth = 1)
-plot(math.max(-5.0, math.min(50.0, buy3)), title = "Buy Long (132d)", color = color.new(color.green, 40), linewidth = 1)
+plot(math.max(-5.0, math.min(50.0, buy1)), title = "Buy Short (22d)", color = color.new(color.green, 50), linewidth = 1)
+plot(math.max(-5.0, math.min(50.0, buy2)), title = "Buy Medium (66d)", color = color.new(color.green, 25), linewidth = 1)
+plot(math.max(-5.0, math.min(50.0, buy3)), title = "Buy Long (132d)", color = color.new(color.green, 0), linewidth = 1)
 
 // Weis columns occupy 100 to 200, with their zero line at 150.
-plot(150.0 + scaledWeis, style = plot.style_columns, color = directionIsUp ? color.new(color.green, 75) : color.new(color.red, 75), linewidth = 3, histbase = 150, title = "Weis Wave Volume")
+plot(150.0 + scaledWeis, style = plot.style_columns, color = directionIsUp ? color.new(color.green, 0) : color.new(color.red, 0), linewidth = 3, histbase = 150, title = "Weis Wave Volume")
 
 // VIX occupies 50 to 100 and is clipped at the upper boundary.
-plot(scaledVix, title = "TVC:VIX", color = color.orange, linewidth = 2)
+plot(scaledVix, title = "TVC:VIX", color = color.orange, linewidth = 1)
 
 // Higher lookbacks take precedence and produce brighter green shading.
 bg_color = buy3 < 0 ? color.new(color.green, 65) :
